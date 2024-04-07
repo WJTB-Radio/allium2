@@ -2,6 +2,7 @@ import { FormEvent } from 'react';
 import { useRecoilState } from 'recoil';
 import { automationEnabledState } from './automation';
 import { currentPageState } from './router';
+import { ipcMain, ipcRenderer } from 'electron';
 
 export default function DJ() {
 	const [automationEnabled, setAutomationEnabled] = useRecoilState(automationEnabledState);
@@ -16,6 +17,12 @@ export default function DJ() {
 		<button onClick={toggleAutomation}>
 			{automationEnabled ? 'Stop Automation' : 'Start Automation'}
 		</button>
+		<button onClick={() => {
+			ipcRenderer.send('playBumpers', 3, '/home/julia/Music/bumpers');
+			ipcRenderer.once('donePlayingBumpers', () => {
+				console.log('done playing');
+			});
+		}}>test</button>
 	</>
 }
 

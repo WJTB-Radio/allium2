@@ -23,6 +23,7 @@ const config: ForgeConfig = {
 			mainConfig,
 			renderer: {
 				config: rendererConfig,
+				nodeIntegration: true,
 				entryPoints: [
 					{
 						html: './src/index.html',

@@ -12,7 +12,7 @@ export function resume() {
 	//TODO
 }
 
-export function stop() {
+export function pause() {
 	if(backingOff) {
 		return;
 	}
@@ -49,7 +49,20 @@ export type PlayingInfo = {
 	timestamp: number
 	/** Progress into the currently playing track or episode. */
 	progress_ms: number | null
+	/** The currently playing track or episode. */
+	item: TrackObject | EpisodeObject | null
 };
+
+export type TrackObject = {
+	/** The track length in milliseconds. */
+	duration_ms: number
+};
+
+export type EpisodeObject = {
+	/** The episode length in milliseconds. */
+	duration_ms: number
+};
+
 export async function getPlayingInfo(): Promise<PlayingInfo> {
 	if(backingOff) {
 		return Promise.reject('backing off');
@@ -70,8 +83,17 @@ export async function getPlayingInfo(): Promise<PlayingInfo> {
 					backingOff = false;
 					backoffTime = Math.min(backoffTime*2.0, maxBackoffTime);
 				}, backoffTime);
+			} else if(error.status === 401) {
+				reauthenticate();
 			}
 		}
 		return Promise.reject(error);
 	});
+}
+
+function reauthenticate() {
+	if(backingOff) {
+		return;
+	}
+	//TODO
 }
