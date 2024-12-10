@@ -1,93 +1,93 @@
-import { useEffect } from 'react';
-import { atom, useRecoilState } from 'recoil';
-import { Block, getCurrentBlock } from './schedule';
-import { getPlayingInfo, setRepeat, setShuffle, startPlaylist, pause, resume } from '../api/spotify';
-import { ipcMain, ipcRenderer } from 'electron';
+import { Howl } from "howler";
+import {
+	getBumperGroup,
+	getBumperInterval,
+	getCurrentBlock,
+	getPlaylist,
+	getShuffle,
+	globalSettings,
+} from "./schedule";
+import { getSongsInDirectory } from "./ipc";
+import { joinPaths } from "./util/path";
+import { shuffle } from "./util/shuffle";
+import { useEffect } from "react";
 
-export const automationEnabledState = atom({
-	key: 'automationEnabled',
-	default: true,
-});
+// in ms
+const crossfadeDuration = 1000;
 
-let currentBlock: Block | undefined;
-let isOverrunning: boolean = false;
-function startBlock(block: Block) {
-	isOverrunning = false;
-	startPlaylist(block.spotifyURI);
-	setShuffle(block.shuffle);
-	setRepeat(false);
-	currentBlock = block;
-}
+const recentlyPlayedBumpers: string[] = [];
+const recentlyPlayedSongs: string[] = [];
 
-let songEnd: number | 'none' | 'fetching' = 'none';
-let currentLatency: number = 0;
-// runs every 0.25 seconds while automation is enabled
-function tick() {
-	if(playingBumpers) {
+let song: Howl | undefined;
+
+let songsPlayed = 0;
+let crossfadeTimeout: number | undefined;
+async function next() {
+	if (!globalSettings.libraryPath) {
 		return;
 	}
-	let newBlock = getCurrentBlock();
-	if(currentBlock == undefined) {
-		startBlock(newBlock);
-		return;
-	}
-	if(newBlock.id !== currentBlock.id) {
-		if(currentBlock.overrun) {
-			isOverrunning = true;
-		} else {
-			startBlock(newBlock);
+	const block = getCurrentBlock();
+	let selectedFile: string | undefined;
+	if (songsPlayed >= getBumperInterval(block)) {
+		songsPlayed++;
+		// play a song
+		const playlist = getPlaylist(block);
+		if (!playlist) {
+			console.error("missing playlist");
 			return;
 		}
-	}
-	if(songEnd === 'none') {
-		songEnd = 'fetching';
-		const fetchTime = Date.now();
-		getPlayingInfo().then((data) => {
-			if(data.item == null) {
-				songEnd = 'none';
-				return;
-			}
-			songEnd = data.item.duration_ms - data.progress_ms;
-			// assume rtt doesnt change signifigantly
-			currentLatency = data.timestamp - fetchTime;
-			songEnd -= currentLatency;
-		}, (_error) => {
-			songEnd = 'none';
-		});
-	} else if(typeof songEnd === 'number') {
-		if(Date.now() >= songEnd) {
-			onSongEnd();
-			songEnd = 'none';
+		const songs = await getSongsInDirectory(
+			joinPaths(globalSettings.libraryPath, playlist.directory)
+		);
+		if (getShuffle(block)) {
+			selectedFile = shuffle(songs, recentlyPlayedSongs);
+		} else {
+			const selectedIdx =
+				(songs.findIndex((song) => playlist.lastPlayed == song) + 1) %
+				songs.length;
+			selectedFile = songs[selectedIdx];
 		}
+		playlist.lastPlayed = selectedFile;
+	} else {
+		// play a bumper
+		const bumperGroup = getBumperGroup(block);
+		if (!bumperGroup) {
+			console.error("missing bumper group");
+			return;
+		}
+		const bumpers = await getSongsInDirectory(
+			joinPaths(globalSettings.libraryPath, bumperGroup.directory)
+		);
+		selectedFile = shuffle(bumpers, recentlyPlayedBumpers);
+	}
+	if (song) {
+		song.fade(song.volume(), 0.0, crossfadeDuration);
+	}
+	if (selectedFile) {
+		song = new Howl({ src: [`file://${selectedFile}`] });
+		song.fade(0.0, 1.0, crossfadeDuration).play();
+		crossfadeTimeout = window.setTimeout(() => {
+			next();
+		}, song.duration() * 1000 - crossfadeDuration);
+	} else {
+		next();
 	}
 }
 
-let songCount = 0;
-let playingBumpers = false;
-function onSongEnd() {
-	songCount += 1;
-	if(songCount >= currentBlock.bumperInterval) {
-		songCount = 0;
-		playingBumpers = true;
-		pause();
-		ipcRenderer.send('playBumpers', currentBlock.numBumpers, currentBlock.bumperPath);
-		ipcRenderer.once('donePlayingBumpers', () => {
-			resume();
-			playingBumpers = false;
-		});
+export function fadeOut(fadeTime: number) {
+	if (crossfadeTimeout != undefined) {
+		window.clearTimeout(crossfadeTimeout);
+	}
+	crossfadeTimeout = undefined;
+	if (song) {
+		song.fade(song.volume(), 0.0, fadeTime);
+		song = undefined;
 	}
 }
 
 export default function Automation() {
-	const [automationEnabled, setAutomationEnabled] = useRecoilState(automationEnabledState);
 	useEffect(() => {
-		if(!automationEnabled) {
-			return;
-		}
-		const t = window.setInterval(tick, 250);
-		return () => {
-			window.clearInterval(t);
-		};
-	}, [automationEnabled]);
+		next();
+	}, []);
 	return <></>;
 }
