@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { loadLibrary, loadSettings, saveLibrary, saveSettings } from "./ipc";
 import { fallback } from "./util/error";
 import { override } from "./util/override";
-import { signal } from "./util/signal";
+import { signal, useSignal } from "./util/signal";
 
 // time from start of week in ms
 export function getWeekTime(): number {
@@ -102,6 +103,7 @@ let library: Library = {
 	bumperGroups: {},
 };
 
+export let loaded = false;
 export async function load() {
 	const s = await loadSettings();
 	if (s) {
@@ -113,13 +115,26 @@ export async function load() {
 			library = l;
 		}
 	}
+	loaded = true;
 }
 
 export async function save() {
-	saveSettings(globalSettings);
+	if (!loaded) return;
+	await saveSettings(globalSettings);
 	if (globalSettings?.libraryPath) {
-		saveLibrary(globalSettings.libraryPath, library);
+		await saveLibrary(globalSettings.libraryPath, library);
 	}
+}
+
+export function Schedule() {
+	const updateSettings = useSignal(globalSettingsSignal);
+	useEffect(() => {
+		load().then(updateSettings);
+	}, []);
+	useEffect(() => {
+		save();
+	}, [updateSettings]);
+	return <></>;
 }
 
 export interface Schedule {

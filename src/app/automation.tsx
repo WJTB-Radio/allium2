@@ -6,11 +6,14 @@ import {
 	getPlaylist,
 	getShuffle,
 	globalSettings,
+	globalSettingsSignal,
+	loaded,
 } from "./schedule";
 import { getSongsInDirectory } from "./ipc";
 import { joinPaths } from "./util/path";
 import { shuffle } from "./util/shuffle";
 import { useEffect } from "react";
+import { useSignal } from "./util/signal";
 
 // in ms
 const crossfadeDuration = 1000;
@@ -23,12 +26,17 @@ let song: Howl | undefined;
 let songsPlayed = 0;
 let crossfadeTimeout: number | undefined;
 async function next() {
+	if (!loaded) {
+		return;
+	}
 	if (!globalSettings.libraryPath) {
+		console.error("no library path", globalSettings);
 		return;
 	}
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
 	if (songsPlayed >= getBumperInterval(block)) {
+		console.log("playing song");
 		songsPlayed++;
 		// play a song
 		const playlist = getPlaylist(block);
@@ -49,6 +57,8 @@ async function next() {
 		}
 		playlist.lastPlayed = selectedFile;
 	} else {
+		songsPlayed = 0;
+		console.log("playing bumper");
 		// play a bumper
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
@@ -69,8 +79,6 @@ async function next() {
 		crossfadeTimeout = window.setTimeout(() => {
 			next();
 		}, song.duration() * 1000 - crossfadeDuration);
-	} else {
-		next();
 	}
 }
 
@@ -86,8 +94,11 @@ export function fadeOut(fadeTime: number) {
 }
 
 export default function Automation() {
+	const updateSettings = useSignal(globalSettingsSignal);
 	useEffect(() => {
-		next();
-	}, []);
+		if (!song || !song.playing()) {
+			next();
+		}
+	}, [updateSettings]);
 	return <></>;
 }
