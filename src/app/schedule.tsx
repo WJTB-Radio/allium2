@@ -17,6 +17,17 @@ export function getWeekTime(): number {
 }
 
 export function getCurrentBlock(): Block | undefined {
+	return {
+		id: "",
+		bumperGroupOverride: undefined,
+		bumperIntervalOverride: undefined,
+		endsAt: 0,
+		startsAt: 0,
+		numBumpersOverride: undefined,
+		shuffleOverride: undefined,
+		playlist: "playlist-1733840673935",
+	};
+	/*
 	if (!globalSettings?.selectedSchedule) {
 		return undefined;
 	}
@@ -29,16 +40,13 @@ export function getCurrentBlock(): Block | undefined {
 	);
 	return blocks.find(
 		(block) => time > block?.startsAt && time < block?.endsAt
-	);
+	);*/
 }
 
 export function getShuffle(block: Block | undefined): boolean {
 	const playlist = getPlaylist(block);
 	return fallback(
-		override(
-			block?.shuffleOverride,
-			playlist ? playlist.shuffle : undefined
-		),
+		override(block?.shuffleOverride, playlist?.shuffle),
 		true,
 		`shuffle block id ${block?.id}`
 	);
@@ -97,7 +105,7 @@ export let globalSettings: GlobalSettings = {
 
 export const globalSettingsSignal = signal("globalSettings");
 
-let library: Library = {
+export let library: Library = {
 	playlists: {},
 	schedules: {},
 	bumperGroups: {},
@@ -130,7 +138,7 @@ export function Schedule() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	useEffect(() => {
 		load().then(updateSettings);
-	}, []);
+	}, []); // updateSettings in the dep array here would cause an infinite loop
 	useEffect(() => {
 		save();
 	}, [updateSettings]);

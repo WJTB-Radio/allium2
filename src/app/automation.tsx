@@ -35,8 +35,8 @@ async function next() {
 	}
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
-	if (songsPlayed >= getBumperInterval(block)) {
-		console.log("playing song");
+	const bumperInterval = getBumperInterval(block);
+	if (bumperInterval == 0 || songsPlayed <= bumperInterval) {
 		songsPlayed++;
 		// play a song
 		const playlist = getPlaylist(block);
@@ -58,7 +58,6 @@ async function next() {
 		playlist.lastPlayed = selectedFile;
 	} else {
 		songsPlayed = 0;
-		console.log("playing bumper");
 		// play a bumper
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
@@ -74,11 +73,14 @@ async function next() {
 		song.fade(song.volume(), 0.0, crossfadeDuration);
 	}
 	if (selectedFile) {
-		song = new Howl({ src: [`file://${selectedFile}`] });
-		song.fade(0.0, 1.0, crossfadeDuration).play();
-		crossfadeTimeout = window.setTimeout(() => {
-			next();
-		}, song.duration() * 1000 - crossfadeDuration);
+		const s = new Howl({ src: [`file://${selectedFile}`] });
+		song = s;
+		song.on("load", () => {
+			s.fade(0.0, 1.0, crossfadeDuration).play();
+			crossfadeTimeout = window.setTimeout(() => {
+				next();
+			}, s.duration() * 1000 - crossfadeDuration);
+		});
 	}
 }
 

@@ -1,19 +1,24 @@
 import { electronAPI } from "../preload";
 import { GlobalSettings, Library } from "./schedule";
+import { joinPaths } from "./util/path";
 
 function getElectronAPI() {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return (window as any).electronAPI as electronAPI;
 }
 
-export async function selectDirectory(startDirectory: string): Promise<string> {
+export async function selectDirectory(
+	startDirectory: string,
+): Promise<string | undefined> {
 	return getElectronAPI().openDirectory(startDirectory);
 }
 
 export async function getSongsInDirectory(
 	directory: string,
 ): Promise<string[]> {
-	return getElectronAPI().findSongs(directory);
+	return (await getElectronAPI().findSongs(directory)).map((file) =>
+		joinPaths(directory, encodeURIComponent(file))
+	);
 }
 
 export async function loadSettings(): Promise<GlobalSettings | undefined> {
