@@ -1,4 +1,3 @@
-import { atom } from "recoil";
 import { loadLibrary, loadSettings, saveLibrary, saveSettings } from "./ipc";
 import { fallback } from "./util/error";
 import { override } from "./util/override";
