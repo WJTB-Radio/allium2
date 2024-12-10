@@ -21,17 +21,18 @@ const crossfadeDuration = 1000;
 const recentlyPlayedBumpers: string[] = [];
 const recentlyPlayedSongs: string[] = [];
 
-let song: Howl | undefined;
+let currentAudio: Howl | undefined;
+let nextAudio: Howl | undefined;
 
 let songsPlayed = 0;
 let crossfadeTimeout: number | undefined;
-async function next() {
+async function getNextAudio(): Promise<Howl | undefined> {
 	if (!loaded) {
-		return;
+		return undefined;
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
-		return;
+		return undefined;
 	}
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
@@ -69,18 +70,51 @@ async function next() {
 		);
 		selectedFile = shuffle(bumpers, recentlyPlayedBumpers);
 	}
-	if (song) {
-		song.fade(song.volume(), 0.0, crossfadeDuration);
-	}
+
 	if (selectedFile) {
-		const s = new Howl({ src: [`file://${selectedFile}`] });
-		song = s;
-		song.on("load", () => {
-			s.fade(0.0, 1.0, crossfadeDuration).play();
-			crossfadeTimeout = window.setTimeout(() => {
-				next();
-			}, s.duration() * 1000 - crossfadeDuration);
+		const howl = new Howl({ src: [`file://${selectedFile}`] });
+		howl.on("fade", () => {
+			if (howl.volume() == 0) howl.stop();
 		});
+		return howl;
+	} else {
+		return undefined;
+	}
+}
+
+async function howlEvent(audio: Howl, event: string) {
+	return new Promise((resolve, _reject) => {
+		audio.on(event, resolve);
+	});
+}
+
+async function playNext() {
+	if (!nextAudio) nextAudio = await getNextAudio();
+	if (!nextAudio) {
+		return;
+	}
+	if (nextAudio.duration() == 0) {
+		await howlEvent(nextAudio, "load");
+	}
+	nextAudio.fade(0.0, 1.0, crossfadeDuration);
+	nextAudio.play();
+	if (currentAudio) {
+		currentAudio.fade(currentAudio.volume(), 0.0, crossfadeDuration);
+	}
+	crossfadeTimeout = window.setTimeout(async () => {
+		await playNext();
+	}, nextAudio.duration() * 1000 - nextAudio.seek() * 1000 - crossfadeDuration);
+	currentAudio = nextAudio;
+	// preload next audio so its ready when we want it
+	nextAudio = await getNextAudio();
+}
+
+let started = false;
+async function start() {
+	if (!loaded) return;
+	if (!started) {
+		started = true;
+		await playNext();
 	}
 }
 
@@ -89,18 +123,19 @@ export function fadeOut(fadeTime: number) {
 		window.clearTimeout(crossfadeTimeout);
 	}
 	crossfadeTimeout = undefined;
-	if (song) {
-		song.fade(song.volume(), 0.0, fadeTime);
-		song = undefined;
+	if (currentAudio) {
+		currentAudio.fade(currentAudio.volume(), 0.0, fadeTime);
+		currentAudio.on("fade", () => {
+			started = false;
+		});
+		currentAudio = undefined;
 	}
 }
 
 export default function Automation() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	useEffect(() => {
-		if (!song || !song.playing()) {
-			next();
-		}
+		start();
 	}, [updateSettings]);
 	return <></>;
 }
