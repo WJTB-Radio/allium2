@@ -10,7 +10,7 @@ const electronAPI = {
 		ipcRenderer.invoke("saveSettings", settings),
 	loadLibrary: (path: string) => ipcRenderer.invoke("loadLibrary", path),
 	saveLibrary: (path: string, library: string) =>
-		ipcRenderer.invoke("loadLibrary", path, library),
+		ipcRenderer.invoke("saveLibrary", path, library),
 };
 
 export type electronAPI = typeof electronAPI;
