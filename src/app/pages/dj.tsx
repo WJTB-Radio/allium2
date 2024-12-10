@@ -1,21 +1,36 @@
 import { FormEvent } from "react";
 import { useRecoilState } from "recoil";
 import { currentPageState } from "../router";
-import { fadeOut } from "../automation";
+import { fadeIn, fadeOut, isPlaying, playingAtom } from "../automation";
 
-const fadeOutTimes = [1000, 5000];
+const fadeTimes = [1000, 5000];
 export default function DJ() {
+	const [playing, setPlaying] = useRecoilState(playingAtom);
 	return (
 		<>
 			<Login />
-			<p>placeholder</p>
-			{fadeOutTimes.map((time) => {
-				return (
-					<button key={time} onClick={fadeOut.bind(undefined, time)}>
-						fade out ({time}ms)
-					</button>
-				);
-			})}
+			<p>{playing}</p>
+			{isPlaying()
+				? fadeTimes.map((time) => {
+						return (
+							<button
+								key={time}
+								onClick={fadeOut.bind(undefined, time)}
+							>
+								fade out ({time}ms)
+							</button>
+						);
+				  })
+				: fadeTimes.map((time) => {
+						return (
+							<button
+								onClick={fadeIn.bind(undefined, time)}
+								key={time}
+							>
+								fade in ({time})ms
+							</button>
+						);
+				  })}
 		</>
 	);
 }

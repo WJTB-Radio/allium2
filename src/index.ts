@@ -51,6 +51,7 @@ app.on("ready", () => {
 	ipcMain.handle("loadSettings", loadSettings);
 	ipcMain.handle("saveLibrary", saveLibrary);
 	ipcMain.handle("loadLibrary", loadLibrary);
+	ipcMain.handle("getPlatform", () => process.platform);
 	createWindow();
 });
 

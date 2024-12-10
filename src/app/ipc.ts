@@ -2,7 +2,8 @@ import { electronAPI } from "../preload";
 import { GlobalSettings, Library } from "./schedule";
 import { joinPaths } from "./util/path";
 
-function getElectronAPI() {
+export function getElectronAPI() {
+	console.log((window as any).electronAPI);
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return (window as any).electronAPI as electronAPI;
 }

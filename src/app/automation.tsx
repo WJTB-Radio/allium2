@@ -10,10 +10,11 @@ import {
 	loaded,
 } from "./schedule";
 import { getSongsInDirectory } from "./ipc";
-import { joinPaths } from "./util/path";
+import { baseName, joinPaths } from "./util/path";
 import { shuffle } from "./util/shuffle";
-import { useEffect } from "react";
-import { useSignal } from "./util/signal";
+import { useEffect, useMemo } from "react";
+import { signal, useSignal } from "./util/signal";
+import { atom, SetterOrUpdater, useRecoilState } from "recoil";
 
 // in ms
 const crossfadeDuration = 1000;
@@ -28,10 +29,12 @@ let songsPlayed = 0;
 let crossfadeTimeout: number | undefined;
 async function getNextAudio(): Promise<Howl | undefined> {
 	if (!loaded) {
+		if (updatePlaying) updatePlaying("");
 		return undefined;
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
+		if (updatePlaying) updatePlaying("");
 		return undefined;
 	}
 	const block = getCurrentBlock();
@@ -43,6 +46,7 @@ async function getNextAudio(): Promise<Howl | undefined> {
 		const playlist = getPlaylist(block);
 		if (!playlist) {
 			console.error("missing playlist");
+			if (updatePlaying) updatePlaying("");
 			return;
 		}
 		const songs = await getSongsInDirectory(
@@ -63,6 +67,7 @@ async function getNextAudio(): Promise<Howl | undefined> {
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
 			console.error("missing bumper group");
+			if (updatePlaying) updatePlaying("");
 			return;
 		}
 		const bumpers = await getSongsInDirectory(
@@ -74,10 +79,17 @@ async function getNextAudio(): Promise<Howl | undefined> {
 	if (selectedFile) {
 		const howl = new Howl({ src: [`file://${selectedFile}`] });
 		howl.on("fade", () => {
-			if (howl.volume() == 0) howl.stop();
+			if (howl.volume() == 0) {
+				howl.stop();
+				if (updatePlaying) updatePlaying("");
+			}
 		});
+		if (updatePlaying) {
+			updatePlaying(decodeURIComponent(baseName(selectedFile) ?? ""));
+		}
 		return howl;
 	} else {
+		if (updatePlaying) updatePlaying("");
 		return undefined;
 	}
 }
@@ -88,7 +100,8 @@ async function howlEvent(audio: Howl, event: string) {
 	});
 }
 
-async function playNext() {
+async function playNext(fadeTime?: number) {
+	if (!fadeTime) fadeTime = crossfadeDuration;
 	if (!nextAudio) nextAudio = await getNextAudio();
 	if (!nextAudio) {
 		return;
@@ -96,10 +109,10 @@ async function playNext() {
 	if (nextAudio.duration() == 0) {
 		await howlEvent(nextAudio, "load");
 	}
-	nextAudio.fade(0.0, 1.0, crossfadeDuration);
+	nextAudio.fade(0.0, 1.0, fadeTime);
 	nextAudio.play();
 	if (currentAudio) {
-		currentAudio.fade(currentAudio.volume(), 0.0, crossfadeDuration);
+		currentAudio.fade(currentAudio.volume(), 0.0, fadeTime);
 	}
 	crossfadeTimeout = window.setTimeout(async () => {
 		await playNext();
@@ -107,6 +120,10 @@ async function playNext() {
 	currentAudio = nextAudio;
 	// preload next audio so its ready when we want it
 	nextAudio = await getNextAudio();
+}
+
+export function isPlaying() {
+	return currentAudio?.playing() ?? false;
 }
 
 let started = false;
@@ -132,10 +149,24 @@ export function fadeOut(fadeTime: number) {
 	}
 }
 
+export function fadeIn(fadeTime: number) {
+	if (currentAudio && currentAudio.playing()) return;
+	playNext(fadeTime);
+}
+
+export const playingAtom = atom({ key: "playing", default: "" });
+let updatePlaying: SetterOrUpdater<string> | undefined;
+
 export default function Automation() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	useEffect(() => {
 		start();
 	}, [updateSettings]);
+	return useMemo(() => <Playing />, []);
+}
+
+function Playing() {
+	const [playing, setPlaying] = useRecoilState(playingAtom);
+	updatePlaying = setPlaying;
 	return <></>;
 }

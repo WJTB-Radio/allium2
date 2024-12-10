@@ -11,6 +11,7 @@ const electronAPI = {
 	loadLibrary: (path: string) => ipcRenderer.invoke("loadLibrary", path),
 	saveLibrary: (path: string, library: string) =>
 		ipcRenderer.invoke("saveLibrary", path, library),
+	getPlatform: () => ipcRenderer.invoke("getPlatform"),
 };
 
 export type electronAPI = typeof electronAPI;
