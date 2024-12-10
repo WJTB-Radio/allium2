@@ -1,7 +1,9 @@
 import { selectDirectory } from "../ipc";
-import { globalSettings, save } from "../schedule";
+import { globalSettings, globalSettingsSignal, save } from "../schedule";
+import { useSignal } from "../util/signal";
 
 export function GlobalSettings() {
+	const updateSettings = useSignal(globalSettingsSignal);
 	return (
 		<>
 			<h1>Settings</h1>
@@ -10,6 +12,7 @@ export function GlobalSettings() {
 			<button
 				onClick={async () => {
 					globalSettings.libraryPath = await selectDirectory("");
+					updateSettings();
 					save();
 				}}
 			>

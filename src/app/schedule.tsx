@@ -1,6 +1,8 @@
+import { atom } from "recoil";
 import { loadLibrary, loadSettings, saveLibrary, saveSettings } from "./ipc";
 import { fallback } from "./util/error";
 import { override } from "./util/override";
+import { signal } from "./util/signal";
 
 // time from start of week in ms
 export function getWeekTime(): number {
@@ -92,6 +94,8 @@ export let globalSettings: GlobalSettings = {
 	numBumpers: 1,
 	bumperInterval: 4,
 };
+
+export const globalSettingsSignal = signal("globalSettings");
 
 let library: Library = {
 	playlists: {},
