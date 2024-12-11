@@ -142,7 +142,7 @@ async function saveSettings(
 }
 
 async function loadSettings() {
-	return (await fs.readFile("settings.json").catch(() => Promise.resolve("")))
+	return (await fs.readFile("settings.json").catch(() => ""))
 		.toString();
 }
 
@@ -158,7 +158,6 @@ async function loadLibrary(
 	_event: IpcMainInvokeEvent,
 	path: string,
 ) {
-	return (await fs.readFile(`${path}/library.json`).catch(() =>
-		Promise.resolve("")
-	)).toString();
+	return (await fs.readFile(`${path}/library.json`).catch(() => ""))
+		.toString();
 }

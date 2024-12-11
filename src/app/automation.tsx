@@ -15,6 +15,7 @@ import { shuffle } from "./util/shuffle";
 import { useEffect, useMemo } from "react";
 import { useSignal } from "./util/signal";
 import { atom, SetterOrUpdater, useRecoilState } from "recoil";
+import { clearAllTimeouts } from "./util/timeout";
 
 // in ms
 const crossfadeDuration = 300;
@@ -100,6 +101,10 @@ async function howlEvent(audio: Howl, event: string) {
 }
 
 async function playNext(fadeTime?: number) {
+	if (crossfadeTimeout != undefined) {
+		window.clearTimeout(crossfadeTimeout);
+		crossfadeTimeout = undefined;
+	}
 	if (!fadeTime) fadeTime = crossfadeDuration;
 	if (!nextAudio.audio) nextAudio = await getNextAudio();
 	if (!nextAudio.audio) {
@@ -107,6 +112,8 @@ async function playNext(fadeTime?: number) {
 	}
 	if (nextAudio.audio.duration() == 0) {
 		await howlEvent(nextAudio.audio, "load");
+		// nextAudio might have changed since we started loading
+		if (!nextAudio.audio) return;
 	}
 	nextAudio.audio.fade(0.0, 1.0, fadeTime);
 	nextAudio.audio.play();
@@ -130,6 +137,8 @@ let started = false;
 async function start() {
 	if (!loaded) return;
 	if (!started) {
+		// reset state for case of hot-reload
+		clearAllTimeouts();
 		started = true;
 		await playNext();
 	}
@@ -138,14 +147,11 @@ async function start() {
 export function fadeOut(fadeTime: number) {
 	if (crossfadeTimeout != undefined) {
 		window.clearTimeout(crossfadeTimeout);
+		crossfadeTimeout = undefined;
 	}
-	crossfadeTimeout = undefined;
 	if (currentAudio.audio) {
 		if (updatePlaying) updatePlaying("");
 		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
-		currentAudio.audio.on("fade", () => {
-			started = false;
-		});
 		currentAudio.audio = undefined;
 	}
 }
