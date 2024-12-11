@@ -16,6 +16,7 @@ import { useEffect, useMemo } from "react";
 import { useSignal } from "./util/signal";
 import { atom, SetterOrUpdater, useRecoilState } from "recoil";
 import { clearAllTimeouts } from "./util/timeout";
+import { formatSongTime } from "./util/format";
 
 // in ms
 const crossfadeDuration = 300;
@@ -117,7 +118,7 @@ async function playNext(fadeTime?: number) {
 	}
 	nextAudio.audio.fade(0.0, 1.0, fadeTime);
 	nextAudio.audio.play();
-	if (updatePlaying) updatePlaying(nextAudio.name);
+	changePlaying(nextAudio);
 	if (currentAudio.audio) {
 		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
 	}
@@ -133,12 +134,33 @@ export function isPlaying() {
 	return currentAudio.audio?.playing() ?? false;
 }
 
+function changePlaying(audio: AudioDescription) {
+	if (updatePlaying) updatePlaying(audio.name);
+	if (updateDuration) {
+		const duration = audio.audio?.duration();
+		updateDuration(duration == undefined ? "" : formatSongTime(duration));
+	}
+	changeTime(audio);
+}
+
+function changeTime(audio?: AudioDescription) {
+	if (!audio) audio = currentAudio;
+	if (!updateTime) return;
+	if (audio.audio) {
+		const time = audio.audio.seek();
+		updateTime(formatSongTime(time));
+	} else {
+		updateTime("");
+	}
+}
+
 let started = false;
 async function start() {
 	if (!loaded) return;
 	if (!started) {
 		// reset state for case of hot-reload
 		clearAllTimeouts();
+		setInterval(changeTime, 100);
 		started = true;
 		await playNext();
 	}
@@ -150,9 +172,10 @@ export function fadeOut(fadeTime: number) {
 		crossfadeTimeout = undefined;
 	}
 	if (currentAudio.audio) {
-		if (updatePlaying) updatePlaying("");
 		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
 		currentAudio.audio = undefined;
+		currentAudio.name = "";
+		changePlaying(currentAudio);
 	}
 }
 
@@ -160,9 +183,6 @@ export function fadeIn(fadeTime: number) {
 	if (currentAudio.audio && currentAudio.audio.playing()) return;
 	playNext(fadeTime);
 }
-
-export const playingAtom = atom({ key: "playing", default: "" });
-let updatePlaying: SetterOrUpdater<string> | undefined;
 
 export default function Automation() {
 	const updateSettings = useSignal(globalSettingsSignal);
@@ -172,8 +192,18 @@ export default function Automation() {
 	return useMemo(() => <Playing />, []);
 }
 
+export const playingAtom = atom({ key: "playing", default: "" });
+let updatePlaying: SetterOrUpdater<string> | undefined;
+export const timeAtom = atom({ key: "time", default: "" });
+let updateTime: SetterOrUpdater<string> | undefined;
+export const durationAtom = atom({ key: "duration", default: "" });
+let updateDuration: SetterOrUpdater<string> | undefined;
 function Playing() {
-	const [playing, setPlaying] = useRecoilState(playingAtom);
+	const [_playing, setPlaying] = useRecoilState(playingAtom);
 	updatePlaying = setPlaying;
+	const [_time, setTime] = useRecoilState(timeAtom);
+	updateTime = setTime;
+	const [_duration, setDuration] = useRecoilState(durationAtom);
+	updateDuration = setDuration;
 	return <></>;
 }

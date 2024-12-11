@@ -2,7 +2,7 @@ export type IDTypes = "playlist" | "bumper-group" | "block" | "schedule";
 
 function getIdString(type: IDTypes, offset: number): string {
 	return `${type}-${
-		(new Date().getTime() + Math.floor(Math.random() * 3000) + offset)
+		(new Date().getTime() + offset)
 			.toString()
 	}`;
 }

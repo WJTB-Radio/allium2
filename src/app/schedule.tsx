@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { loadLibrary, loadSettings, saveLibrary, saveSettings } from "./ipc";
 import { fallback } from "./util/error";
-import { override } from "./util/override";
 import { signal, useSignal } from "./util/signal";
 
 // time from start of week in ms
@@ -46,7 +45,7 @@ export function getCurrentBlock(): Block | undefined {
 export function getShuffle(block: Block | undefined): boolean {
 	const playlist = getPlaylist(block);
 	return fallback(
-		override(block?.shuffleOverride, playlist?.shuffle),
+		block?.shuffleOverride ?? playlist?.shuffle,
 		true,
 		`shuffle block id ${block?.id}`
 	);
@@ -56,12 +55,10 @@ export function getBumperInterval(block: Block | undefined): number {
 	const playlist = getPlaylist(block);
 	const bumperGroup = getBumperGroup(block);
 	return fallback(
-		override(
-			block?.bumperIntervalOverride,
-			playlist?.bumperIntervalOverride,
-			bumperGroup?.bumperIntervalOverride,
-			globalSettings?.bumperInterval
-		),
+		block?.bumperIntervalOverride ??
+			playlist?.bumperIntervalOverride ??
+			bumperGroup?.bumperIntervalOverride ??
+			globalSettings?.bumperInterval,
 		4,
 		`bumper interval block id ${block?.id}`
 	);
@@ -71,12 +68,10 @@ export function getNumBumpers(block: Block | undefined): number {
 	const playlist = getPlaylist(block);
 	const bumperGroup = getBumperGroup(block);
 	return fallback(
-		override(
-			block?.numBumpersOverride,
-			playlist?.numBumpersOverride,
-			bumperGroup?.numBumpersOverride,
-			globalSettings?.numBumpers
-		),
+		block?.numBumpersOverride ??
+			playlist?.numBumpersOverride ??
+			bumperGroup?.numBumpersOverride ??
+			globalSettings?.numBumpers,
 		1,
 		`num bumpers block id ${block?.id}`
 	);
@@ -88,11 +83,11 @@ export function getPlaylist(block: Block | undefined) {
 
 export function getBumperGroup(block: Block | undefined) {
 	const playlist = getPlaylist(block);
-	return override(
-		block && block.bumperGroupOverride
+	return (
+		(block && block.bumperGroupOverride
 			? library.bumperGroups[block.bumperGroupOverride]
-			: undefined,
-		playlist ? library.bumperGroups[playlist.bumperGroup] : undefined
+			: undefined) ??
+		(playlist ? library.bumperGroups[playlist.bumperGroup] : undefined)
 	);
 }
 

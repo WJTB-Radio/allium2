@@ -1,11 +1,20 @@
 import { FormEvent } from "react";
 import { useRecoilState } from "recoil";
 import { currentPageState } from "../router";
-import { fadeIn, fadeOut, isPlaying, playingAtom } from "../automation";
+import {
+	durationAtom,
+	fadeIn,
+	fadeOut,
+	isPlaying,
+	playingAtom,
+	timeAtom,
+} from "../automation";
 
 const fadeTimes = [300, 3000];
 export default function DJ() {
-	const [playing, setPlaying] = useRecoilState(playingAtom);
+	const [playing, _setPlaying] = useRecoilState(playingAtom);
+	const [time, _setTime] = useRecoilState(timeAtom);
+	const [duration, _setDuration] = useRecoilState(durationAtom);
 	return (
 		<>
 			<Login />
@@ -30,7 +39,11 @@ export default function DJ() {
 							</button>
 						);
 				  })}
-			<p>{playing}</p>
+			{playing && playing != "" ? (
+				<p>
+					{playing} at {time} / {duration}
+				</p>
+			) : undefined}
 		</>
 	);
 }
