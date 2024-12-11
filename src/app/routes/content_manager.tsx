@@ -10,6 +10,7 @@ export function ContentManager() {
 	return (
 		<>
 			<Link to="/playlists">edit playlists</Link>
+			<Link to="/bumpers">edit bumpers</Link>
 			<Link to="/global_settings">edit settings</Link>
 		</>
 	);

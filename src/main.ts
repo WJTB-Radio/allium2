@@ -134,6 +134,7 @@ async function findSongs(
 			"**/*.aac",
 			"**/*.alac",
 			"**/*.amr",
+			"**/*.m4a",
 		],
 		{
 			cwd: path,
