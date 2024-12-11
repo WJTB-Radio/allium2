@@ -1,0 +1,35 @@
+table button {
+	width: 100%;
+}
+
+.login {
+	margin-top: auto;
+}
+
+.spacer {
+	flex-grow: 1;
+}
+
+.fadeOutWarning {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 1rem 0;
+}
+
+.nowPlaying p,
+.upNext p {
+	margin: 0;
+}
+
+.upNext,
+.nowPlaying {
+	margin-top: 1rem;
+}
+
+.song {
+	font-size: 2rem;
+}
+
+.time {
+	font-size: 1.5rem;
+}

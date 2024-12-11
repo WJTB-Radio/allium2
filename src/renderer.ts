@@ -5,11 +5,6 @@ import { createElement } from "react";
 import { initPath } from "./app/util/path";
 
 initPath().then(() => {
-	const app = document.getElementById("app");
-	if (app) {
-		const root = createRoot(app);
-		root.render(createElement(App));
-	} else {
-		console.error("no app div found in dom");
-	}
+	const root = createRoot(document.body);
+	root.render(createElement(App));
 });

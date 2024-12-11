@@ -3,14 +3,37 @@
 }
 
 body {
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-		Arial, sans-serif;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, Helvetica, Arial, sans-serif;
 	font-size: 1.5rem;
 	margin: auto;
 	max-width: 38rem;
 	padding: 2rem;
+	min-height: 100svh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
-button, input {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: 500;
+	margin: 0;
+}
+
+h1 {
+	font-size: 3rem;
+}
+
+h2 {
+	font-size: 2.5rem;
+}
+
+button,
+input {
 	font-size: 1.5rem;
 }

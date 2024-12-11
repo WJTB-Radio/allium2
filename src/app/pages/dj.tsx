@@ -13,6 +13,7 @@ import {
 	timeAtom,
 } from "../automation";
 import { useForceUpdate } from "../util/signal";
+import styles from "./dj.module.css";
 
 const fadeTimes = [300, 3000];
 export default function DJ() {
@@ -23,14 +24,17 @@ export default function DJ() {
 	const forceUpdate = useForceUpdate();
 	return (
 		<>
-			<Login />
+			<h1>allium :D</h1>
+			<p>allium plays music when noone's show is on.</p>
 			{playing != "" ? (
 				<>
 					{fadeOnSongEnd != undefined ? (
-						<div>
+						<div className={styles.fadeOutWarning}>
 							<span>
-								fading out in {fadeOnSongEnd}ms at end of song
+								{fadeOnSongEnd}ms fade out at end of song (
+								{time} / {duration})
 							</span>
+							<div className={styles.spacer} />
 							<button
 								onClick={() => {
 									cancelFadeOnSongEnd();
@@ -68,7 +72,7 @@ export default function DJ() {
 													fadeOut(time);
 												}}
 											>
-												fade out ({time}ms)
+												fade out now ({time}ms)
 											</button>
 										</td>
 									);
@@ -78,25 +82,49 @@ export default function DJ() {
 					</table>
 				</>
 			) : (
-				fadeTimes.map((time) => {
-					return (
-						<button
-							onClick={() => {
-								fadeIn(time);
-							}}
-							key={time}
-						>
-							fade in ({time})ms
-						</button>
-					);
-				})
+				<table>
+					<tbody>
+						<tr>
+							{fadeTimes.map((time) => {
+								return (
+									<td key={time}>
+										<button
+											onClick={() => {
+												fadeIn(time);
+											}}
+										>
+											fade in ({time}ms)
+										</button>
+									</td>
+								);
+							})}
+						</tr>
+					</tbody>
+				</table>
 			)}
-			{playing && playing != "" ? (
-				<p>
-					{playing} at {time} / {duration}
-				</p>
-			) : undefined}
-			{next.name != "" ? <p>up next: {next.name}</p> : undefined}
+			<div className={styles.nowPlaying}>
+				<h2>now playing</h2>
+				{playing && playing != "" ? (
+					<>
+						<p className={styles.song}>{playing}</p>
+						<p className={styles.time}>
+							{time} / {duration}
+						</p>
+					</>
+				) : (
+					<>
+						<p>nothing</p>
+					</>
+				)}
+			</div>
+			<div className={styles.upNext}>
+				<h2>up next</h2>
+				{next.name != "" ? (
+					<p className={styles.song}>{next.name}</p>
+				) : undefined}
+			</div>
+			<div className={styles.spacer}></div>
+			<Login />
 		</>
 	);
 }
@@ -118,7 +146,7 @@ function Login() {
 	}
 
 	return (
-		<form onSubmit={login}>
+		<form onSubmit={login} className={styles.login}>
 			<label>
 				password
 				<input name="password" type="password" />
