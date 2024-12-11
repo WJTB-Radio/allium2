@@ -10,6 +10,7 @@ import {
 	fadeOutOnSongEnd,
 	getNext,
 	playingAtom,
+	skipNext,
 	timeAtom,
 } from "../automation";
 import { useForceUpdate } from "../util/signal";
@@ -122,6 +123,14 @@ export default function DJ() {
 				{next.name != "" ? (
 					<p className={styles.song}>{next.name}</p>
 				) : undefined}
+				<button
+					onClick={async () => {
+						await skipNext();
+						forceUpdate();
+					}}
+				>
+					skip
+				</button>
 			</div>
 			<div className={styles.spacer}></div>
 			<Login />

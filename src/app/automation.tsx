@@ -217,6 +217,10 @@ export function getNext() {
 	return nextAudio;
 }
 
+export async function skipNext() {
+	nextAudio = await getNextAudio();
+}
+
 export default function Automation() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	useEffect(() => {
