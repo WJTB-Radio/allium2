@@ -1,0 +1,11 @@
+.entry {
+	display: flex;
+}
+
+.entry > input {
+	flex-grow: 1;
+}
+
+.entry button {
+	width: 100%;
+}

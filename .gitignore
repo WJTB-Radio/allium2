@@ -93,3 +93,6 @@ out/
 
 # application settings
 settings.json
+
+# tanstack router
+*.gen.ts

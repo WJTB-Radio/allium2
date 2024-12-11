@@ -54,7 +54,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 			return { audio: undefined, name: "" };
 		}
 		const songs = await getSongsInDirectory(
-			joinPaths(globalSettings.libraryPath, playlist.directory)
+			joinPaths(globalSettings.libraryPath, playlist.directory),
 		);
 		if (getShuffle(block)) {
 			selectedFile = shuffle(songs, recentlyPlayedSongs);
@@ -74,7 +74,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 			return { audio: undefined, name: "" };
 		}
 		const bumpers = await getSongsInDirectory(
-			joinPaths(globalSettings.libraryPath, bumperGroup.directory)
+			joinPaths(globalSettings.libraryPath, bumperGroup.directory),
 		);
 		selectedFile = shuffle(bumpers, recentlyPlayedBumpers);
 	}
@@ -111,7 +111,7 @@ async function playNext(fadeTime?: number) {
 		currentAudio.audio.fade(
 			currentAudio.audio.volume(),
 			0.0,
-			fadeOnSongEnd ?? fadeTime
+			fadeOnSongEnd ?? fadeTime,
 		);
 		if (fadeOnSongEnd != undefined) {
 			fadeOnSongEnd = undefined;
@@ -146,7 +146,7 @@ function playNextAfterFade(audio: AudioDescription, fade: number) {
 	if (!audio.audio) return;
 	crossfadeTimeout = window.setTimeout(
 		playNext,
-		audio.audio.duration() * 1000 - audio.audio.seek() * 1000 - fade
+		audio.audio.duration() * 1000 - audio.audio.seek() * 1000 - fade,
 	);
 }
 

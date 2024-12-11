@@ -1,6 +1,5 @@
 import { FormEvent } from "react";
 import { useRecoilState } from "recoil";
-import { currentPageState } from "../router";
 import {
 	cancelFadeOnSongEnd,
 	durationAtom,
@@ -14,17 +13,22 @@ import {
 	timeAtom,
 } from "../automation";
 import { useForceUpdate } from "../util/signal";
-import styles from "./dj.module.css";
+import styles from "./index.module.css";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/")({
+	component: DJ,
+});
 
 const fadeTimes = [300, 3000];
-export default function DJ() {
+export function DJ() {
 	const [playing, _setPlaying] = useRecoilState(playingAtom);
 	const [time, _setTime] = useRecoilState(timeAtom);
 	const [duration, _setDuration] = useRecoilState(durationAtom);
 	const next = getNext();
 	const forceUpdate = useForceUpdate();
 	return (
-		<>
+		<div className="centerContainer">
 			<h1>allium :D</h1>
 			<p>allium plays music when noone's show is on.</p>
 			{playing != "" ? (
@@ -35,7 +39,7 @@ export default function DJ() {
 								{fadeOnSongEnd}ms fade out at end of song (
 								{time} / {duration})
 							</span>
-							<div className={styles.spacer} />
+							<div className="spacer" />
 							<button
 								onClick={() => {
 									cancelFadeOnSongEnd();
@@ -132,23 +136,21 @@ export default function DJ() {
 					skip
 				</button>
 			</div>
-			<div className={styles.spacer}></div>
+			<div className="spacer" />
 			<Login />
-		</>
+		</div>
 	);
 }
 
 function Login() {
-	const [_currentPage, setCurrentPage] = useRecoilState(currentPageState);
+	const navigate = useNavigate();
 	function login(event: FormEvent) {
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
 		const password = formData.get("password");
 		if (password === "shredded") {
-			setCurrentPage("content_manager");
-		} else if (password === "shredded2") {
-			setCurrentPage("admin");
+			navigate({ to: "/content_manager" });
 		} else {
 			form.reset();
 		}

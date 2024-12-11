@@ -1,6 +1,11 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { selectDirectory } from "../ipc";
 import { globalSettings, globalSettingsSignal } from "../schedule";
 import { useSignal } from "../util/signal";
+
+export const Route = createFileRoute("/global_settings")({
+	component: GlobalSettings,
+});
 
 export function GlobalSettings() {
 	const updateSettings = useSignal(globalSettingsSignal);

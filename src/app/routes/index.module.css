@@ -1,13 +1,5 @@
-table button {
-	width: 100%;
-}
-
 .login {
-	margin-top: auto;
-}
-
-.spacer {
-	flex-grow: 1;
+	margin: auto;
 }
 
 .fadeOutWarning {

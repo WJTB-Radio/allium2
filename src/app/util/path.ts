@@ -1,10 +1,8 @@
-import { getElectronAPI } from "../ipc";
+import { platform } from "../ipc";
 
 let pathSeperator: "/" | "\\" = "/";
-export async function initPath() {
-	pathSeperator = (await getElectronAPI().getPlatform()) == "win32"
-		? "\\"
-		: "/";
+export function initPathSeperator() {
+	pathSeperator = platform == "win32" ? "\\" : "/";
 }
 
 // join paths together

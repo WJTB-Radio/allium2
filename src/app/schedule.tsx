@@ -47,7 +47,7 @@ export function getShuffle(block: Block | undefined): boolean {
 	return fallback(
 		block?.shuffleOverride ?? playlist?.shuffle,
 		true,
-		`shuffle block id ${block?.id}`
+		`shuffle block id ${block?.id}`,
 	);
 }
 
@@ -60,7 +60,7 @@ export function getBumperInterval(block: Block | undefined): number {
 			bumperGroup?.bumperIntervalOverride ??
 			globalSettings?.bumperInterval,
 		4,
-		`bumper interval block id ${block?.id}`
+		`bumper interval block id ${block?.id}`,
 	);
 }
 
@@ -73,7 +73,7 @@ export function getNumBumpers(block: Block | undefined): number {
 			bumperGroup?.numBumpersOverride ??
 			globalSettings?.numBumpers,
 		1,
-		`num bumpers block id ${block?.id}`
+		`num bumpers block id ${block?.id}`,
 	);
 }
 
