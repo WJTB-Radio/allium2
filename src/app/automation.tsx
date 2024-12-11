@@ -107,6 +107,19 @@ async function playNext(fadeTime?: number) {
 		crossfadeTimeout = undefined;
 	}
 	if (!fadeTime) fadeTime = crossfadeDuration;
+	if (currentAudio.audio) {
+		currentAudio.audio.fade(
+			currentAudio.audio.volume(),
+			0.0,
+			fadeOnSongEnd ?? fadeTime
+		);
+		if (fadeOnSongEnd != undefined) {
+			fadeOnSongEnd = undefined;
+			changePlaying({ audio: undefined, name: "" });
+			return;
+		}
+	}
+	if (fadeOnSongEnd != undefined) return;
 	if (!nextAudio.audio) nextAudio = await getNextAudio();
 	if (!nextAudio.audio) {
 		return;
@@ -119,19 +132,22 @@ async function playNext(fadeTime?: number) {
 	nextAudio.audio.fade(0.0, 1.0, fadeTime);
 	nextAudio.audio.play();
 	changePlaying(nextAudio);
-	if (currentAudio.audio) {
-		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
-	}
-	crossfadeTimeout = window.setTimeout(async () => {
-		await playNext();
-	}, nextAudio.audio.duration() * 1000 - nextAudio.audio.seek() * 1000 - crossfadeDuration);
+	playNextAfterFade(nextAudio, crossfadeDuration);
 	currentAudio = nextAudio;
 	// preload next audio so its ready when we want it
 	nextAudio = await getNextAudio();
 }
 
-export function isPlaying() {
-	return currentAudio.audio?.playing() ?? false;
+function playNextAfterFade(audio: AudioDescription, fade: number) {
+	if (crossfadeTimeout != undefined) {
+		window.clearTimeout(crossfadeTimeout);
+		crossfadeTimeout = undefined;
+	}
+	if (!audio.audio) return;
+	crossfadeTimeout = window.setTimeout(
+		playNext,
+		audio.audio.duration() * 1000 - audio.audio.seek() * 1000 - fade
+	);
 }
 
 function changePlaying(audio: AudioDescription) {
@@ -166,6 +182,18 @@ async function start() {
 	}
 }
 
+export let fadeOnSongEnd: undefined | number = undefined;
+export function fadeOutOnSongEnd(fadeTime: number) {
+	fadeOnSongEnd = fadeTime;
+	if (!currentAudio.audio) return;
+	playNextAfterFade(currentAudio, fadeOnSongEnd);
+}
+
+export function cancelFadeOnSongEnd() {
+	fadeOnSongEnd = undefined;
+	playNextAfterFade(currentAudio, crossfadeDuration);
+}
+
 export function fadeOut(fadeTime: number) {
 	if (crossfadeTimeout != undefined) {
 		window.clearTimeout(crossfadeTimeout);
@@ -180,8 +208,13 @@ export function fadeOut(fadeTime: number) {
 }
 
 export function fadeIn(fadeTime: number) {
+	cancelFadeOnSongEnd();
 	if (currentAudio.audio && currentAudio.audio.playing()) return;
 	playNext(fadeTime);
+}
+
+export function getNext() {
+	return nextAudio;
 }
 
 export default function Automation() {
