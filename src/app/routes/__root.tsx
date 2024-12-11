@@ -5,6 +5,7 @@ import {
 	useLocation,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { debug } from "../ipc";
 
 export const Route = createRootRoute({
 	component: Root,
@@ -21,7 +22,7 @@ function Root() {
 				</>
 			) : undefined}
 			<Outlet />
-			<TanStackRouterDevtools />
+			{debug ? <TanStackRouterDevtools /> : undefined}
 		</>
 	);
 }
