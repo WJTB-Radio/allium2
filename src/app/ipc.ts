@@ -1,9 +1,8 @@
 import { electronAPI } from "../preload";
 import { GlobalSettings, Library } from "./schedule";
-import { joinPaths } from "./util/path";
+import { baseName, joinPaths } from "./util/path";
 
 export function getElectronAPI() {
-	console.log((window as any).electronAPI);
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return (window as any).electronAPI as electronAPI;
 }
@@ -17,7 +16,7 @@ export async function selectDirectory(
 export async function getSongsInDirectory(
 	directory: string,
 ): Promise<string[]> {
-	return (await getElectronAPI().findSongs(directory)).map((file) =>
+	return (await getElectronAPI().findSongs(directory)).sort().map((file) =>
 		joinPaths(directory, encodeURIComponent(file))
 	);
 }

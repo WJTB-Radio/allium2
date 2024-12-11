@@ -3,13 +3,12 @@ import { useRecoilState } from "recoil";
 import { currentPageState } from "../router";
 import { fadeIn, fadeOut, isPlaying, playingAtom } from "../automation";
 
-const fadeTimes = [1000, 5000];
+const fadeTimes = [300, 3000];
 export default function DJ() {
 	const [playing, setPlaying] = useRecoilState(playingAtom);
 	return (
 		<>
 			<Login />
-			<p>{playing}</p>
 			{isPlaying()
 				? fadeTimes.map((time) => {
 						return (
@@ -31,6 +30,7 @@ export default function DJ() {
 							</button>
 						);
 				  })}
+			<p>{playing}</p>
 		</>
 	);
 }
@@ -57,7 +57,7 @@ function Login() {
 				password
 				<input name="password" type="password" />
 			</label>
-			<button type="submit">Login</button>
+			<button type="submit">login</button>
 		</form>
 	);
 }

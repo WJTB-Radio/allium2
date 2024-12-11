@@ -35,7 +35,10 @@ const createWindow = (): void => {
 		},
 	});
 
-	mainWindow.removeMenu();
+	mainWindow.menuBarVisible = false;
+	if (app.isPackaged) {
+		mainWindow.removeMenu();
+	}
 
 	// and load the index.html of the app.
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);

@@ -13,29 +13,32 @@ import { getSongsInDirectory } from "./ipc";
 import { baseName, joinPaths } from "./util/path";
 import { shuffle } from "./util/shuffle";
 import { useEffect, useMemo } from "react";
-import { signal, useSignal } from "./util/signal";
+import { useSignal } from "./util/signal";
 import { atom, SetterOrUpdater, useRecoilState } from "recoil";
 
 // in ms
-const crossfadeDuration = 1000;
+const crossfadeDuration = 300;
 
 const recentlyPlayedBumpers: string[] = [];
 const recentlyPlayedSongs: string[] = [];
 
-let currentAudio: Howl | undefined;
-let nextAudio: Howl | undefined;
+interface AudioDescription {
+	audio: Howl | undefined;
+	name: string;
+}
+
+let currentAudio: AudioDescription = { audio: undefined, name: "" };
+let nextAudio: AudioDescription = { audio: undefined, name: "" };
 
 let songsPlayed = 0;
 let crossfadeTimeout: number | undefined;
-async function getNextAudio(): Promise<Howl | undefined> {
+async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
-		if (updatePlaying) updatePlaying("");
-		return undefined;
+		return { audio: undefined, name: "" };
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
-		if (updatePlaying) updatePlaying("");
-		return undefined;
+		return { audio: undefined, name: "" };
 	}
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
@@ -46,8 +49,7 @@ async function getNextAudio(): Promise<Howl | undefined> {
 		const playlist = getPlaylist(block);
 		if (!playlist) {
 			console.error("missing playlist");
-			if (updatePlaying) updatePlaying("");
-			return;
+			return { audio: undefined, name: "" };
 		}
 		const songs = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, playlist.directory)
@@ -67,8 +69,7 @@ async function getNextAudio(): Promise<Howl | undefined> {
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
 			console.error("missing bumper group");
-			if (updatePlaying) updatePlaying("");
-			return;
+			return { audio: undefined, name: "" };
 		}
 		const bumpers = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, bumperGroup.directory)
@@ -81,16 +82,14 @@ async function getNextAudio(): Promise<Howl | undefined> {
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
 				howl.stop();
-				if (updatePlaying) updatePlaying("");
 			}
 		});
-		if (updatePlaying) {
-			updatePlaying(decodeURIComponent(baseName(selectedFile) ?? ""));
-		}
-		return howl;
+		return {
+			audio: howl,
+			name: decodeURIComponent(baseName(selectedFile) ?? ""),
+		};
 	} else {
-		if (updatePlaying) updatePlaying("");
-		return undefined;
+		return { audio: undefined, name: "" };
 	}
 }
 
@@ -102,28 +101,29 @@ async function howlEvent(audio: Howl, event: string) {
 
 async function playNext(fadeTime?: number) {
 	if (!fadeTime) fadeTime = crossfadeDuration;
-	if (!nextAudio) nextAudio = await getNextAudio();
-	if (!nextAudio) {
+	if (!nextAudio.audio) nextAudio = await getNextAudio();
+	if (!nextAudio.audio) {
 		return;
 	}
-	if (nextAudio.duration() == 0) {
-		await howlEvent(nextAudio, "load");
+	if (nextAudio.audio.duration() == 0) {
+		await howlEvent(nextAudio.audio, "load");
 	}
-	nextAudio.fade(0.0, 1.0, fadeTime);
-	nextAudio.play();
-	if (currentAudio) {
-		currentAudio.fade(currentAudio.volume(), 0.0, fadeTime);
+	nextAudio.audio.fade(0.0, 1.0, fadeTime);
+	nextAudio.audio.play();
+	if (updatePlaying) updatePlaying(nextAudio.name);
+	if (currentAudio.audio) {
+		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
 	}
 	crossfadeTimeout = window.setTimeout(async () => {
 		await playNext();
-	}, nextAudio.duration() * 1000 - nextAudio.seek() * 1000 - crossfadeDuration);
+	}, nextAudio.audio.duration() * 1000 - nextAudio.audio.seek() * 1000 - crossfadeDuration);
 	currentAudio = nextAudio;
 	// preload next audio so its ready when we want it
 	nextAudio = await getNextAudio();
 }
 
 export function isPlaying() {
-	return currentAudio?.playing() ?? false;
+	return currentAudio.audio?.playing() ?? false;
 }
 
 let started = false;
@@ -140,17 +140,18 @@ export function fadeOut(fadeTime: number) {
 		window.clearTimeout(crossfadeTimeout);
 	}
 	crossfadeTimeout = undefined;
-	if (currentAudio) {
-		currentAudio.fade(currentAudio.volume(), 0.0, fadeTime);
-		currentAudio.on("fade", () => {
+	if (currentAudio.audio) {
+		if (updatePlaying) updatePlaying("");
+		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
+		currentAudio.audio.on("fade", () => {
 			started = false;
 		});
-		currentAudio = undefined;
+		currentAudio.audio = undefined;
 	}
 }
 
 export function fadeIn(fadeTime: number) {
-	if (currentAudio && currentAudio.playing()) return;
+	if (currentAudio.audio && currentAudio.audio.playing()) return;
 	playNext(fadeTime);
 }
 
