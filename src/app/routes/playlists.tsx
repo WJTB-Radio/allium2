@@ -10,9 +10,11 @@ import { generateId } from "../util/id_generator";
 import { joinPaths, removePathPrefix } from "../util/path";
 import { useSignal } from "../util/signal";
 import styles from "./playlists.module.css";
+import { beforeLoadAuth } from "../auth";
 
 export const Route = createFileRoute("/playlists")({
 	component: Playlists,
+	beforeLoad: beforeLoadAuth,
 });
 
 export function Playlists() {

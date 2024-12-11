@@ -15,6 +15,7 @@ import {
 import { useForceUpdate } from "../util/signal";
 import styles from "./index.module.css";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { login, logout } from "../auth";
 
 export const Route = createFileRoute("/")({
 	component: DJ,
@@ -143,13 +144,14 @@ export function DJ() {
 }
 
 function Login() {
+	logout();
 	const navigate = useNavigate();
-	function login(event: FormEvent) {
+	function onLogin(event: FormEvent) {
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
-		const password = formData.get("password");
-		if (password === "shredded") {
+		const password = (formData.get("password") ?? "") as string;
+		if (login(password)) {
 			navigate({ to: "/content_manager" });
 		} else {
 			form.reset();
@@ -157,7 +159,7 @@ function Login() {
 	}
 
 	return (
-		<form onSubmit={login} className={styles.login}>
+		<form onSubmit={onLogin} className={styles.login}>
 			<label>
 				password
 				<input name="password" type="password" />

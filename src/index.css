@@ -45,6 +45,7 @@ h2 {
 button,
 input {
 	font-size: 1.5rem;
+	width: fit-content;
 }
 
 table button {
