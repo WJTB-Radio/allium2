@@ -45,7 +45,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
 	const bumperInterval = getBumperInterval(block);
-	if (bumperInterval == 0 || songsPlayed <= bumperInterval) {
+	if (bumperInterval == 0 || songsPlayed < bumperInterval) {
 		songsPlayed++;
 		// play a song
 		const playlist = getPlaylist(block);
