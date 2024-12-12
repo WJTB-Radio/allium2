@@ -107,12 +107,14 @@ export let library: Library = {
 };
 
 export let loaded = false;
-export async function load() {
-	const s = await loadSettings();
-	if (s) {
-		globalSettings = s;
+export async function load(what?: { library: boolean; settings: boolean }) {
+	if (what?.settings ?? true) {
+		const s = await loadSettings();
+		if (s) {
+			globalSettings = s;
+		}
 	}
-	if (globalSettings?.libraryPath) {
+	if ((what?.library ?? true) && globalSettings?.libraryPath) {
 		const l = await loadLibrary(globalSettings.libraryPath);
 		if (l) {
 			library = l;

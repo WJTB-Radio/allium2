@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { selectDirectory } from "../ipc";
-import { globalSettings, globalSettingsSignal } from "../schedule";
+import { globalSettings, globalSettingsSignal, load } from "../schedule";
 import { useSignal } from "../util/signal";
 import { beforeLoadAuth } from "../auth";
 
@@ -19,6 +19,7 @@ export function GlobalSettings() {
 			<button
 				onClick={async () => {
 					globalSettings.libraryPath = await selectDirectory("");
+					await load({ settings: false, library: true });
 					updateSettings();
 				}}
 			>
