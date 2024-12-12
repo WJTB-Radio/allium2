@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { beforeLoadAuth } from "../auth";
 import styles from "./schedule_edit.module.css";
 import {
+	Block,
 	getDefaultPlaylist,
 	getPlaylist,
 	getSchedule,
@@ -12,6 +13,7 @@ import {
 import { generateId } from "../util/id_generator";
 import { useSignal } from "../util/signal";
 import { formatIntWithMinDigits } from "../util/format";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/schedule_edit")({
 	component: ScheduleEdit,
@@ -22,6 +24,31 @@ export function ScheduleEdit() {
 	const schedules = getSchedules();
 	const schedule = getSchedule();
 	const updateSettings = useSignal(globalSettingsSignal);
+	const [pressedBlock, setPressedBlock] = useState<Block | undefined>(
+		undefined,
+	);
+	const [dragY, setDragY] = useState(0);
+	const days = [...Array(7).keys()].map((_) =>
+		useRef<HTMLDivElement | null>(null),
+	);
+	function snapTime(time: number) {
+		const r = 1000 * 60 * 15;
+		return Math.floor(time / r) * r;
+	}
+	useEffect(() => {
+		function onMouseUp() {
+			setPressedBlock(undefined);
+		}
+		function onMouseLeave() {
+			setPressedBlock(undefined);
+		}
+		document.body.addEventListener("mouseup", onMouseUp);
+		document.body.addEventListener("mouseleave", onMouseLeave);
+		return () => {
+			document.body.removeEventListener("mouseup", onMouseUp);
+			document.body.removeEventListener("mouseleave", onMouseLeave);
+		};
+	}, [setPressedBlock]);
 	return (
 		<div>
 			<div>
@@ -92,16 +119,19 @@ export function ScheduleEdit() {
 					<div className={styles.week}>
 						{[...Array(7).keys()].map((day) => (
 							<div
+								ref={days[day]}
 								className={styles.day}
 								key={day}
-								onClick={(event) => {
+								onMouseDown={(event) => {
+									if (event.button != 2) return;
 									const ratio =
 										event.nativeEvent.offsetY /
 										(event.target as HTMLDivElement)
 											.offsetHeight;
-									const timeClicked =
+									const timeClicked = snapTime(
 										ratio * 24 * 60 * 60 * 1000 +
-										day * 24 * 60 * 60 * 1000;
+											day * 24 * 60 * 60 * 1000,
+									);
 									schedule.blocks.push({
 										id: generateId(
 											"block",
@@ -117,23 +147,68 @@ export function ScheduleEdit() {
 									});
 									updateSettings();
 								}}
+								onMouseMove={(event) => {
+									if (pressedBlock == undefined) return;
+									const top =
+										days[
+											day
+										].current?.getBoundingClientRect()
+											.top ?? 0;
+									const length =
+										pressedBlock.endsAt -
+										pressedBlock.startsAt;
+									const ratio = Math.min(
+										Math.max(
+											(event.clientY - top - dragY) /
+												(days[day].current
+													?.offsetHeight ?? 0),
+											0.0,
+										),
+										1.0 - length / (24 * 60 * 60 * 1000),
+									);
+									const time = snapTime(
+										ratio * 24 * 60 * 60 * 1000 +
+											day * 24 * 60 * 60 * 1000,
+									);
+									const startsAt = pressedBlock.startsAt;
+									const endsAt = pressedBlock.endsAt;
+									pressedBlock.startsAt = time;
+									pressedBlock.endsAt = time + length;
+									if (
+										pressedBlock.startsAt != startsAt ||
+										pressedBlock.endsAt != endsAt
+									) {
+										updateSettings();
+									}
+								}}
 							>
 								{schedule.blocks
 									.filter(
 										(block) =>
-											block.startsAt >
+											block.startsAt >=
 												day * 24 * 60 * 60 * 1000 &&
-											block.endsAt <
+											block.endsAt <=
 												(day + 1) * 24 * 60 * 60 * 1000,
 									)
 									.map((block) => (
 										<div
 											key={block.id}
-											className={styles.block}
+											className={`${styles.block} ${pressedBlock == block ? styles.selected : ""}`}
 											style={{
 												top: `${100 * ((block.startsAt - day * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000))}%`,
 												height: `${100 * ((block.endsAt - block.startsAt) / (24 * 60 * 60 * 1000))}%`,
 												backgroundColor: `${getPlaylist(block)?.color}aa`,
+											}}
+											onMouseDown={(event) => {
+												event.stopPropagation();
+												setDragY(
+													event.nativeEvent.offsetY,
+												);
+												setPressedBlock(block);
+											}}
+											onMouseUp={(event) => {
+												event.stopPropagation();
+												setPressedBlock(undefined);
 											}}
 											onClick={(event) => {
 												event.stopPropagation();
