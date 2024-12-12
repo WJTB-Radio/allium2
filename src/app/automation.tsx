@@ -128,6 +128,7 @@ async function playNext(fadeTime?: number) {
 	if (fadeOnSongEnd != undefined) return;
 	if (!nextAudio.audio) nextAudio = await getNextAudio();
 	if (!nextAudio.audio) {
+		changePlaying(nextAudio);
 		return;
 	}
 	if (nextAudio.audio.duration() == 0) {
