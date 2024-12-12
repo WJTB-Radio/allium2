@@ -69,7 +69,7 @@ export function ScheduleEdit() {
 					</label>
 					<hr />
 					<div className={styles.ticks}>
-						{[...Array(24 * 2).keys()]
+						{[...Array(24 * 2 + 1).keys()]
 							.map((i) => ({
 								hour: Math.floor(i / 2),
 								minute: (i % 2) * 30,
@@ -82,7 +82,7 @@ export function ScheduleEdit() {
 										top: `${ratio * 100}%`,
 									}}
 									className={styles.tick}
-								>{`${hour > 12 ? hour - 12 : hour}:${formatIntWithMinDigits(minute)} ${hour > 11 ? "pm" : "am"}`}</div>
+								>{`${hour > 12 ? hour - 12 : hour == 0 ? 12 : hour}:${formatIntWithMinDigits(minute)} ${hour > 11 && hour != 24 ? "pm" : "am"}`}</div>
 							))}
 					</div>
 					<div className={styles.week}>
