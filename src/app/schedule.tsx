@@ -42,6 +42,17 @@ export function getCurrentBlock(): Block | undefined {
 	);*/
 }
 
+export function getSchedules(): Record<string, Schedule> {
+	const schedules = library?.schedules;
+	return fallback(schedules, {}, "schedules");
+}
+
+export function getSchedule(): Schedule | undefined {
+	const schedules = getSchedules();
+	if (!library.selectedSchedule) return undefined;
+	return schedules[library.selectedSchedule];
+}
+
 export function getShuffle(block: Block | undefined): boolean {
 	const playlist = getPlaylist(block);
 	return fallback(
@@ -92,7 +103,6 @@ export function getBumperGroup(block: Block | undefined) {
 }
 
 export let globalSettings: GlobalSettings = {
-	selectedSchedule: undefined,
 	libraryPath: undefined,
 	numBumpers: 1,
 	bumperInterval: 4,
@@ -101,6 +111,7 @@ export let globalSettings: GlobalSettings = {
 export const globalSettingsSignal = signal("globalSettings");
 
 export let library: Library = {
+	selectedSchedule: undefined,
 	playlists: {},
 	schedules: {},
 	bumperGroups: {},
@@ -184,13 +195,13 @@ export interface BumperGroup {
 }
 
 export interface GlobalSettings {
-	selectedSchedule: string | undefined;
 	libraryPath: string | undefined;
 	numBumpers: number;
 	bumperInterval: number;
 }
 
 export interface Library {
+	selectedSchedule: string | undefined;
 	playlists: Record<string, Playlist>;
 	schedules: Record<string, Schedule>;
 	bumperGroups: Record<string, BumperGroup>;

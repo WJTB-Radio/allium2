@@ -1,0 +1,30 @@
+.ticks,
+.week {
+	width: 100%;
+	height: 300rem;
+}
+
+.week {
+	display: flex;
+	padding-left: 8rem;
+}
+
+.ticks {
+	position: absolute;
+	user-select: none;
+}
+
+.tick {
+	left: 0%;
+	right: 0%;
+	border-top: 0.25rem dotted #888;
+	user-select: none;
+	color: #888;
+	padding-left: 0.5rem;
+}
+
+.day {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+}
