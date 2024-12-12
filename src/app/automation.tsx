@@ -86,6 +86,12 @@ async function getNextAudio(): Promise<AudioDescription> {
 				howl.stop();
 			}
 		});
+		howl.on("loaderror", async () => {
+			nextAudio = await getNextAudio();
+		});
+		howl.on("playerror", async () => {
+			await playNext();
+		});
 		return {
 			audio: howl,
 			name: decodeURIComponent(baseName(selectedFile) ?? ""),

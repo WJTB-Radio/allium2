@@ -1,19 +1,11 @@
-import { platform } from "../ipc";
-
-let pathSeperator: "/" | "\\" = "/";
-export function initPathSeperator() {
-	pathSeperator = platform == "win32" ? "\\" : "/";
-}
-
 // join paths together
-// tolerant of non normalized paths
 // joinPaths("/hello//", "world///") -> "hello/world"
 export function joinPaths(...args: string[]): string {
 	return args.map((path) => path.trim()).map((path, index) =>
 		// dont trim leading slash from first path
-		(index == 0 ? /(?<path>.*)\/*/ : /^\/*(?<path>.*)\/*/).exec(path)
+		(index == 0 ? /^(?<path>.*?)\/*$/ : /^\/*(?<path>.*?)\/*$/).exec(path)
 			?.groups?.path
-	).join(pathSeperator);
+	).join("/");
 }
 
 // remove prefix from path
@@ -30,9 +22,7 @@ export function removePathPrefix(
 }
 
 export function baseName(path: string): string | undefined {
-	return new RegExp(
-		`(:?${pathSeperator}.*${pathSeperator})*(?<basename>.*)\\..*`,
-	).exec(
+	return /\/?(:?.*\/)*(?<basename>.*)\..*/.exec(
 		path,
 	)?.groups
 		?.basename;

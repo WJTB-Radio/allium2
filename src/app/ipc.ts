@@ -1,6 +1,6 @@
 import { electronAPI } from "../preload";
 import { GlobalSettings, Library } from "./schedule";
-import { initPathSeperator, joinPaths } from "./util/path";
+import { joinPaths } from "./util/path";
 
 export function getElectronAPI() {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +17,7 @@ export async function getSongsInDirectory(
 	directory: string,
 ): Promise<string[]> {
 	return (await getElectronAPI().findSongs(directory)).sort().map((file) =>
-		joinPaths(directory, encodeURIComponent(file))
+		joinPaths(directory, encodeURI(file))
 	);
 }
 
@@ -52,5 +52,4 @@ export let platform: NodeJS.Platform;
 export async function getInfo() {
 	debug = await getElectronAPI().getDebug();
 	platform = await getElectronAPI().getPlatform();
-	initPathSeperator();
 }

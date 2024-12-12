@@ -102,7 +102,6 @@ export function ScheduleEdit() {
 									const timeClicked =
 										ratio * 24 * 60 * 60 * 1000 +
 										day * 24 * 60 * 60 * 1000;
-									console.log(timeClicked);
 									schedule.blocks.push({
 										id: generateId(
 											"block",
@@ -138,11 +137,6 @@ export function ScheduleEdit() {
 											}}
 											onClick={(event) => {
 												event.stopPropagation();
-												console.log(
-													(block.endsAt -
-														block.startsAt) /
-														(1000 * 60 * 60),
-												);
 											}}
 										>
 											{getPlaylist(block)?.name ?? ""}
