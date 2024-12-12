@@ -16,30 +16,19 @@ export function getWeekTime(): number {
 }
 
 export function getCurrentBlock(): Block | undefined {
-	return {
-		id: "",
-		bumperGroupOverride: undefined,
-		bumperIntervalOverride: undefined,
-		endsAt: 0,
-		startsAt: 0,
-		numBumpersOverride: undefined,
-		shuffleOverride: undefined,
-		playlist: "playlist-1733840673935",
-	};
-	/*
-	if (!globalSettings?.selectedSchedule) {
+	if (!library.selectedSchedule) {
 		return undefined;
 	}
 	const time = getWeekTime();
-	const schedules = fallback(library?.schedules, {}, "schedules");
+	const schedules = getSchedules();
 	const blocks = fallback(
-		schedules[globalSettings.selectedSchedule]?.blocks,
+		schedules[library.selectedSchedule]?.blocks,
 		[],
-		"blocks"
+		"blocks",
 	);
 	return blocks.find(
-		(block) => time > block?.startsAt && time < block?.endsAt
-	);*/
+		(block) => time > block?.startsAt && time < block?.endsAt,
+	);
 }
 
 export function getSchedules(): Record<string, Schedule> {
@@ -58,7 +47,7 @@ export function getShuffle(block: Block | undefined): boolean {
 	return fallback(
 		block?.shuffleOverride ?? playlist?.shuffle,
 		true,
-		`shuffle block id ${block?.id}`,
+		`shuffle block id ${block}`,
 	);
 }
 
@@ -71,7 +60,7 @@ export function getBumperInterval(block: Block | undefined): number {
 			bumperGroup?.bumperIntervalOverride ??
 			globalSettings?.bumperInterval,
 		4,
-		`bumper interval block id ${block?.id}`,
+		`bumper interval block id ${block}`,
 	);
 }
 
@@ -84,8 +73,17 @@ export function getNumBumpers(block: Block | undefined): number {
 			bumperGroup?.numBumpersOverride ??
 			globalSettings?.numBumpers,
 		1,
-		`num bumpers block id ${block?.id}`,
+		`num bumpers block id ${block}`,
 	);
+}
+
+export function getDefaultPlaylist(): string {
+	const playlistIds = Object.keys(library.playlists);
+	if (playlistIds.length == 0) {
+		console.error("no playlists");
+		return "";
+	}
+	return playlistIds[0];
 }
 
 export function getPlaylist(block: Block | undefined) {

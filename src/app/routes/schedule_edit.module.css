@@ -1,13 +1,23 @@
 .ticks,
 .week {
 	width: 100%;
-	height: 300rem;
+	height: 200rem;
 }
 
 .week {
 	display: flex;
+	position: relative;
 	padding-left: 8rem;
 	margin-bottom: 10rem;
+}
+
+.block {
+	position: absolute;
+	left: 0%;
+	width: 100%;
+	border: 4px solid black;
+	border-radius: 8px;
+	padding: 0.5rem;
 }
 
 .ticks {
@@ -25,6 +35,7 @@
 }
 
 .day {
+	position: relative;
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;

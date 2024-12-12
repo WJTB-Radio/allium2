@@ -8,10 +8,17 @@ function getIdString(type: IDTypes, offset: number): string {
 }
 
 // generate a unique id
-export function generateId(type: IDTypes, object: object): string {
+export function generateId(
+	type: IDTypes,
+	object: object | { id: string }[],
+): string {
 	let offset = 0;
 	let id = getIdString(type, offset);
-	while (id in object) {
+	while (
+		Array.isArray(object)
+			? object.find((o) => o.id == id) != undefined
+			: id in object
+	) {
 		offset++;
 		id = getIdString(type, offset);
 		if (offset >= 1000) {

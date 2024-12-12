@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { beforeLoadAuth } from "../auth";
 import styles from "./schedule_edit.module.css";
 import {
+	getDefaultPlaylist,
+	getPlaylist,
 	getSchedule,
 	getSchedules,
 	globalSettingsSignal,
@@ -54,6 +56,7 @@ export function ScheduleEdit() {
 					new schedule
 				</button>
 			</div>
+
 			<hr />
 			{schedule != undefined ? (
 				<>
@@ -77,6 +80,7 @@ export function ScheduleEdit() {
 							}))
 							.map(({ hour, minute, ratio }) => (
 								<div
+									key={ratio}
 									style={{
 										position: "absolute",
 										top: `${ratio * 100}%`,
@@ -87,8 +91,63 @@ export function ScheduleEdit() {
 					</div>
 					<div className={styles.week}>
 						{[...Array(7).keys()].map((day) => (
-							<div className={styles.day} key={day}>
-								{day}
+							<div
+								className={styles.day}
+								key={day}
+								onClick={(event) => {
+									const ratio =
+										event.nativeEvent.offsetY /
+										(event.target as HTMLDivElement)
+											.offsetHeight;
+									const timeClicked =
+										ratio * 24 * 60 * 60 * 1000 +
+										day * 24 * 60 * 60 * 1000;
+									console.log(timeClicked);
+									schedule.blocks.push({
+										id: generateId(
+											"block",
+											schedule.blocks,
+										),
+										playlist: getDefaultPlaylist(),
+										startsAt: timeClicked,
+										endsAt: timeClicked + 1000 * 60 * 60,
+										bumperGroupOverride: undefined,
+										bumperIntervalOverride: undefined,
+										numBumpersOverride: undefined,
+										shuffleOverride: undefined,
+									});
+									updateSettings();
+								}}
+							>
+								{schedule.blocks
+									.filter(
+										(block) =>
+											block.startsAt >
+												day * 24 * 60 * 60 * 1000 &&
+											block.endsAt <
+												(day + 1) * 24 * 60 * 60 * 1000,
+									)
+									.map((block) => (
+										<div
+											key={block.id}
+											className={styles.block}
+											style={{
+												top: `${100 * ((block.startsAt - day * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000))}%`,
+												height: `${100 * ((block.endsAt - block.startsAt) / (24 * 60 * 60 * 1000))}%`,
+												backgroundColor: `${getPlaylist(block)?.color}aa`,
+											}}
+											onClick={(event) => {
+												event.stopPropagation();
+												console.log(
+													(block.endsAt -
+														block.startsAt) /
+														(1000 * 60 * 60),
+												);
+											}}
+										>
+											{getPlaylist(block)?.name ?? ""}
+										</div>
+									))}
 							</div>
 						))}
 					</div>
