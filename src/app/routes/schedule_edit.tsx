@@ -28,19 +28,24 @@ export function ScheduleEdit() {
 		undefined,
 	);
 	const [dragY, setDragY] = useState(0);
+	const [draggedEdge, setDraggedEdge] = useState<number | undefined>(
+		undefined,
+	);
 	const days = [...Array(7).keys()].map((_) =>
 		useRef<HTMLDivElement | null>(null),
 	);
 	function snapTime(time: number) {
 		const r = 1000 * 60 * 15;
-		return Math.floor(time / r) * r;
+		return Math.round(time / r) * r;
 	}
 	useEffect(() => {
 		function onMouseUp() {
 			setPressedBlock(undefined);
+			setDraggedEdge(undefined);
 		}
 		function onMouseLeave() {
 			setPressedBlock(undefined);
+			setDraggedEdge(undefined);
 		}
 		document.body.addEventListener("mouseup", onMouseUp);
 		document.body.addEventListener("mouseleave", onMouseLeave);
@@ -132,14 +137,23 @@ export function ScheduleEdit() {
 										ratio * 24 * 60 * 60 * 1000 +
 											day * 24 * 60 * 60 * 1000,
 									);
+									let startTime = timeClicked;
+									const endTime = Math.min(
+										timeClicked + 1000 * 60 * 60,
+										(day + 1) * 24 * 60 * 60 * 1000,
+									);
+									startTime = Math.min(
+										startTime,
+										endTime - 1000 * 60 * 60,
+									);
 									schedule.blocks.push({
 										id: generateId(
 											"block",
 											schedule.blocks,
 										),
 										playlist: getDefaultPlaylist(),
-										startsAt: timeClicked,
-										endsAt: timeClicked + 1000 * 60 * 60,
+										startsAt: startTime,
+										endsAt: endTime,
 										bumperGroupOverride: undefined,
 										bumperIntervalOverride: undefined,
 										numBumpersOverride: undefined,
@@ -149,6 +163,8 @@ export function ScheduleEdit() {
 								}}
 								onMouseMove={(event) => {
 									if (pressedBlock == undefined) return;
+									const startsAt = pressedBlock.startsAt;
+									const endsAt = pressedBlock.endsAt;
 									const top =
 										days[
 											day
@@ -157,23 +173,66 @@ export function ScheduleEdit() {
 									const length =
 										pressedBlock.endsAt -
 										pressedBlock.startsAt;
-									const ratio = Math.min(
-										Math.max(
-											(event.clientY - top - dragY) /
-												(days[day].current
-													?.offsetHeight ?? 0),
-											0.0,
-										),
-										1.0 - length / (24 * 60 * 60 * 1000),
-									);
-									const time = snapTime(
-										ratio * 24 * 60 * 60 * 1000 +
-											day * 24 * 60 * 60 * 1000,
-									);
-									const startsAt = pressedBlock.startsAt;
-									const endsAt = pressedBlock.endsAt;
-									pressedBlock.startsAt = time;
-									pressedBlock.endsAt = time + length;
+									if (draggedEdge == undefined) {
+										const ratio = Math.min(
+											Math.max(
+												(event.clientY - top - dragY) /
+													(days[day].current
+														?.offsetHeight ?? 0),
+												0.0,
+											),
+											1.0 -
+												length / (24 * 60 * 60 * 1000),
+										);
+										const time = snapTime(
+											ratio * 24 * 60 * 60 * 1000 +
+												day * 24 * 60 * 60 * 1000,
+										);
+										pressedBlock.startsAt = time;
+										pressedBlock.endsAt = time + length;
+									} else {
+										if (
+											pressedBlock.startsAt <
+												day * 24 * 60 * 60 * 1000 ||
+											pressedBlock.endsAt <
+												day * 24 * 60 * 60 * 1000 ||
+											pressedBlock.startsAt >
+												(day + 1) *
+													24 *
+													60 *
+													60 *
+													1000 ||
+											pressedBlock.endsAt >
+												(day + 1) * 24 * 60 * 60 * 1000
+										) {
+											setDraggedEdge(undefined);
+											return;
+										}
+										const ratio = Math.min(
+											Math.max(
+												(event.clientY - top) /
+													(days[day].current
+														?.offsetHeight ?? 0),
+												0.0,
+											),
+											1.0,
+										);
+										const time = snapTime(
+											ratio * 24 * 60 * 60 * 1000 +
+												day * 24 * 60 * 60 * 1000,
+										);
+										if (draggedEdge == 0) {
+											pressedBlock.startsAt = Math.min(
+												time,
+												endsAt - 1000 * 60 * 30,
+											);
+										} else {
+											pressedBlock.endsAt = Math.max(
+												time,
+												startsAt + 1000 * 60 * 30,
+											);
+										}
+									}
 									if (
 										pressedBlock.startsAt != startsAt ||
 										pressedBlock.endsAt != endsAt
@@ -193,7 +252,7 @@ export function ScheduleEdit() {
 									.map((block) => (
 										<div
 											key={block.id}
-											className={`${styles.block} ${pressedBlock == block ? styles.selected : ""}`}
+											className={`${styles.block} ${pressedBlock == block && draggedEdge == undefined ? styles.selected : ""}`}
 											style={{
 												top: `${100 * ((block.startsAt - day * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000))}%`,
 												height: `${100 * ((block.endsAt - block.startsAt) / (24 * 60 * 60 * 1000))}%`,
@@ -206,15 +265,29 @@ export function ScheduleEdit() {
 												);
 												setPressedBlock(block);
 											}}
-											onMouseUp={(event) => {
-												event.stopPropagation();
-												setPressedBlock(undefined);
-											}}
 											onClick={(event) => {
 												event.stopPropagation();
 											}}
 										>
 											{getPlaylist(block)?.name ?? ""}
+											<div
+												className={`${styles.topResize} ${pressedBlock == block && draggedEdge == 0 ? styles.selected : undefined}`}
+												onMouseDown={(event) => {
+													event.stopPropagation();
+													setDragY(0);
+													setDraggedEdge(0);
+													setPressedBlock(block);
+												}}
+											/>
+											<div
+												className={`${styles.bottomResize} ${pressedBlock == block && draggedEdge == 1 ? styles.selected : undefined}`}
+												onMouseDown={(event) => {
+													event.stopPropagation();
+													setDragY(0);
+													setDraggedEdge(1);
+													setPressedBlock(block);
+												}}
+											/>
 										</div>
 									))}
 							</div>
