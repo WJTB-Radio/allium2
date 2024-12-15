@@ -12,19 +12,20 @@ export const Route = createFileRoute("/global_settings")({
 export function GlobalSettings() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
-		<>
+		<div className="centerContainer">
 			<h1>Settings</h1>
-			<p>library path</p>
-			<p>{globalSettings.libraryPath}</p>
+			<p>library path: {globalSettings.libraryPath}</p>
 			<button
 				onClick={async () => {
-					globalSettings.libraryPath = await selectDirectory("");
+					const selected = await selectDirectory("");
+					if (selected == undefined) return;
+					globalSettings.libraryPath = selected;
 					await load({ settings: false, library: true });
 					updateSettings();
 				}}
 			>
 				set library path
 			</button>
-		</>
+		</div>
 	);
 }

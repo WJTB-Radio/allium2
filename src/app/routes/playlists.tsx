@@ -108,12 +108,14 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 				</span>
 				<button
 					onClick={async () => {
+						const selected = await selectDirectory(
+							globalSettings.libraryPath ?? "",
+						);
+						if (selected == undefined) return;
 						props.playlist.directory =
 							removePathPrefix(
 								globalSettings.libraryPath ?? "",
-								(await selectDirectory(
-									globalSettings.libraryPath ?? "",
-								)) ?? "",
+								selected,
 							) ?? "";
 						updateSettings();
 					}}

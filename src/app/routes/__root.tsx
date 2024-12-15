@@ -19,14 +19,16 @@ function Root() {
 		<>
 			{location.pathname != "/" ? (
 				<>
-					<Link to="/">log out</Link>
-					<button
-						onClick={() => {
-							history.go(-1);
-						}}
-					>
-						back
-					</button>
+					<nav>
+						<button
+							onClick={() => {
+								history.go(-1);
+							}}
+						>
+							back
+						</button>
+						<Link to="/">log out</Link>
+					</nav>
 					<hr />
 				</>
 			) : undefined}
