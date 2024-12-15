@@ -20,6 +20,8 @@ export const Route = createFileRoute("/schedule_edit")({
 	beforeLoad: beforeLoadAuth,
 });
 
+const defaultBlockMinutes = 30;
+
 export function ScheduleEdit() {
 	const schedules = getSchedules();
 	const schedule = getSchedule();
@@ -54,6 +56,27 @@ export function ScheduleEdit() {
 			document.body.removeEventListener("mouseleave", onMouseLeave);
 		};
 	}, [setPressedBlock]);
+	function isOverlappingBlock(block: {
+		startsAt: number;
+		endsAt: number;
+		id: string;
+	}) {
+		if (!schedule) return false;
+		return (
+			schedule.blocks.find(
+				(other) =>
+					other.id != block.id &&
+					((other.startsAt < block.endsAt &&
+						block.startsAt <= other.startsAt) ||
+						(other.endsAt > block.startsAt &&
+							block.endsAt >= other.endsAt) ||
+						(block.startsAt >= other.startsAt &&
+							block.endsAt <= other.endsAt) ||
+						(block.startsAt <= other.startsAt &&
+							block.endsAt >= other.endsAt)),
+			) != undefined
+		);
+	}
 	return (
 		<div>
 			<div>
@@ -137,23 +160,33 @@ export function ScheduleEdit() {
 										ratio * 24 * 60 * 60 * 1000 +
 											day * 24 * 60 * 60 * 1000,
 									);
-									let startTime = timeClicked;
-									const endTime = Math.min(
-										timeClicked + 1000 * 60 * 60,
+									let startsAt = timeClicked;
+									const endsAt = Math.min(
+										timeClicked +
+											1000 * 60 * defaultBlockMinutes,
 										(day + 1) * 24 * 60 * 60 * 1000,
 									);
-									startTime = Math.min(
-										startTime,
-										endTime - 1000 * 60 * 60,
+									startsAt = Math.min(
+										startsAt,
+										endsAt -
+											1000 * 60 * defaultBlockMinutes,
 									);
+									if (
+										isOverlappingBlock({
+											startsAt,
+											endsAt,
+											id: "",
+										})
+									)
+										return;
 									schedule.blocks.push({
 										id: generateId(
 											"block",
 											schedule.blocks,
 										),
 										playlist: getDefaultPlaylist(),
-										startsAt: startTime,
-										endsAt: endTime,
+										startsAt,
+										endsAt,
 										bumperGroupOverride: undefined,
 										bumperIntervalOverride: undefined,
 										numBumpersOverride: undefined,
@@ -163,16 +196,17 @@ export function ScheduleEdit() {
 								}}
 								onMouseMove={(event) => {
 									if (pressedBlock == undefined) return;
-									const startsAt = pressedBlock.startsAt;
-									const endsAt = pressedBlock.endsAt;
+									const initialStartsAt =
+										pressedBlock.startsAt;
+									const initialEndsAt = pressedBlock.endsAt;
+									let startsAt = initialStartsAt;
+									let endsAt = initialEndsAt;
 									const top =
 										days[
 											day
 										].current?.getBoundingClientRect()
 											.top ?? 0;
-									const length =
-										pressedBlock.endsAt -
-										pressedBlock.startsAt;
+									const length = endsAt - startsAt;
 									if (draggedEdge == undefined) {
 										const ratio = Math.min(
 											Math.max(
@@ -188,21 +222,21 @@ export function ScheduleEdit() {
 											ratio * 24 * 60 * 60 * 1000 +
 												day * 24 * 60 * 60 * 1000,
 										);
-										pressedBlock.startsAt = time;
-										pressedBlock.endsAt = time + length;
+										startsAt = time;
+										endsAt = time + length;
 									} else {
 										if (
-											pressedBlock.startsAt <
+											startsAt <
 												day * 24 * 60 * 60 * 1000 ||
-											pressedBlock.endsAt <
+											endsAt <
 												day * 24 * 60 * 60 * 1000 ||
-											pressedBlock.startsAt >
+											startsAt >
 												(day + 1) *
 													24 *
 													60 *
 													60 *
 													1000 ||
-											pressedBlock.endsAt >
+											endsAt >
 												(day + 1) * 24 * 60 * 60 * 1000
 										) {
 											setDraggedEdge(undefined);
@@ -222,23 +256,36 @@ export function ScheduleEdit() {
 												day * 24 * 60 * 60 * 1000,
 										);
 										if (draggedEdge == 0) {
-											pressedBlock.startsAt = Math.min(
+											startsAt = Math.min(
 												time,
-												endsAt - 1000 * 60 * 30,
+												initialEndsAt - 1000 * 60 * 30,
 											);
 										} else {
-											pressedBlock.endsAt = Math.max(
+											endsAt = Math.max(
 												time,
-												startsAt + 1000 * 60 * 30,
+												initialStartsAt +
+													1000 * 60 * 30,
 											);
 										}
 									}
+									// dont run unnessecary updates
 									if (
-										pressedBlock.startsAt != startsAt ||
-										pressedBlock.endsAt != endsAt
-									) {
-										updateSettings();
-									}
+										startsAt == initialStartsAt &&
+										endsAt == initialEndsAt
+									)
+										return;
+									// check if we are now overlapping with another block
+									if (
+										isOverlappingBlock({
+											startsAt,
+											endsAt,
+											id: pressedBlock.id,
+										})
+									)
+										return;
+									pressedBlock.startsAt = startsAt;
+									pressedBlock.endsAt = endsAt;
+									updateSettings();
 								}}
 							>
 								{schedule.blocks
