@@ -22,7 +22,8 @@ export function Bumpers() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
 		<div className="centerContainer">
-			<h1>Bumpers</h1>
+			<h1>bumpers</h1>
+			<hr />
 			{Object.entries(library.bumperGroups).map(([id, bumperGroup]) => (
 				<Fragment key={bumperGroup.id}>
 					<BumperEdit

@@ -22,7 +22,8 @@ export function Playlists() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
 		<div className="centerContainer">
-			<h1>Playlists</h1>
+			<h1>playlists</h1>
+			<hr />
 			{Object.entries(library.playlists).map(([id, playlist]) => (
 				<Fragment key={playlist.id}>
 					<PlaylistEdit

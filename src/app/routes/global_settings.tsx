@@ -13,7 +13,8 @@ export function GlobalSettings() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
 		<div className="centerContainer">
-			<h1>Settings</h1>
+			<h1>settings</h1>
+			<hr />
 			<p>library path: {globalSettings.libraryPath}</p>
 			<button
 				onClick={async () => {

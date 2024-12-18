@@ -12,6 +12,8 @@ export function ContentManager() {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
 		<div className="centerContainer">
+			<h1>content management</h1>
+			<hr />
 			{Object.keys(library.schedules).length > 0 ? (
 				<label>
 					select active schedule
@@ -41,10 +43,11 @@ export function ContentManager() {
 					schedule.
 				</p>
 			)}
-			<Link to="/schedule_edit">edit schedules</Link>
-			<Link to="/playlists">edit playlists</Link>
-			<Link to="/bumpers">edit bumpers</Link>
-			<Link to="/global_settings">edit settings</Link>
+			<hr />
+			<Link to="/schedule_edit">schedule editor</Link>
+			<Link to="/playlists">playlist editor</Link>
+			<Link to="/bumpers">bumper editor</Link>
+			<Link to="/global_settings">settings editor</Link>
 		</div>
 	);
 }

@@ -189,7 +189,7 @@ export function ScheduleEdit() {
 			<div>
 				{hasSchedules ? (
 					<label>
-						edit a schedule
+						pick a schedule to edit
 						<select
 							value={schedule?.id ?? ""}
 							onChange={(event) => {

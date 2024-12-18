@@ -16,6 +16,8 @@ if (started) {
 	app.quit();
 }
 
+app.commandLine.appendSwitch("--enable-features", "OverlayScrollbar");
+
 let mainWindow: BrowserWindow;
 const createWindow = () => {
 	// Create the browser window.
@@ -107,10 +109,7 @@ protocol.registerSchemesAsPrivileged([
 	},
 ]);
 
-async function openDirectory(
-	_event: IpcMainInvokeEvent,
-	defaultPath: string,
-) {
+async function openDirectory(_event: IpcMainInvokeEvent, defaultPath: string) {
 	const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
 		title: "select a directory",
 		defaultPath: defaultPath,
@@ -121,10 +120,7 @@ async function openDirectory(
 	}
 }
 
-async function findSongs(
-	_event: IpcMainInvokeEvent,
-	path: string,
-) {
+async function findSongs(_event: IpcMainInvokeEvent, path: string) {
 	return await glob(
 		[
 			"**/*.wav",
@@ -142,16 +138,12 @@ async function findSongs(
 	);
 }
 
-async function saveSettings(
-	_event: IpcMainInvokeEvent,
-	content: string,
-) {
+async function saveSettings(_event: IpcMainInvokeEvent, content: string) {
 	return fs.writeFile("settings.json", content);
 }
 
 async function loadSettings() {
-	return (await fs.readFile("settings.json").catch(() => ""))
-		.toString();
+	return (await fs.readFile("settings.json").catch(() => "")).toString();
 }
 
 async function saveLibrary(
@@ -162,10 +154,8 @@ async function saveLibrary(
 	return fs.writeFile(`${path}/library.json`, content);
 }
 
-async function loadLibrary(
-	_event: IpcMainInvokeEvent,
-	path: string,
-) {
-	return (await fs.readFile(`${path}/library.json`).catch(() => ""))
-		.toString();
+async function loadLibrary(_event: IpcMainInvokeEvent, path: string) {
+	return (
+		await fs.readFile(`${path}/library.json`).catch(() => "")
+	).toString();
 }
