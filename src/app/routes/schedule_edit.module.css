@@ -90,16 +90,19 @@
 	border-left: 4px solid #888;
 }
 
-.popoverContainer {
-	width: max-content;
-	max-width: calc(100svw - 20px);
-	z-index: 1;
-}
-
 .popover {
-	margin: 24px 0px;
+	position: relative;
+	width: max-content;
+	max-width: 30ch;
+	z-index: 1;
 	padding: 16px;
 	border-radius: 8px;
 	background-color: white;
 	border: 4px solid black;
+}
+
+.popoverInputs {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }

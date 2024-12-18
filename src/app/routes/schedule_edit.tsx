@@ -7,6 +7,7 @@ import {
 	getPlaylist,
 	getSchedule,
 	getSchedules,
+	getShuffle,
 	globalSettingsSignal,
 	library,
 	Schedule,
@@ -16,8 +17,10 @@ import { useSignal } from "../util/signal";
 import { formatIntWithMinDigits } from "../util/format";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import {
+	arrow,
 	autoUpdate,
 	flip,
+	FloatingArrow,
 	FloatingFocusManager,
 	limitShift,
 	offset,
@@ -248,6 +251,36 @@ export function ScheduleEdit() {
 					>
 						delete schedule
 					</button>
+					<button
+						onClick={() => {
+							const id = generateId("schedule", schedules);
+							library.schedules[id] = {
+								id,
+								name: `copy of ${schedule.name}`,
+								// need to make sure new blocks dont have the same ids
+								blocks: schedule.blocks.reduce(
+									(blocks, block) => {
+										blocks.push({
+											...block,
+											id: generateId(
+												"block",
+												schedule.blocks.concat(blocks),
+											),
+										});
+										return blocks;
+									},
+									[] as Block[],
+								),
+							};
+							setSelectedSchedule(id);
+							if (library.selectedSchedule == undefined) {
+								library.selectedSchedule = id;
+							}
+							updateSettings();
+						}}
+					>
+						copy schedule
+					</button>
 					<hr />
 					<ul>
 						<li>right click empty space to create a block</li>
@@ -381,6 +414,7 @@ function BlockEdit(props: {
 	schedule: Schedule;
 	updateSettings: () => void;
 }) {
+	const arrowRef = useRef(null);
 	const [isOpen, setIsOpen] = useState(false);
 	if (props.isDragging && isOpen) setIsOpen(false);
 	const { refs, floatingStyles, context } = useFloating({
@@ -392,7 +426,11 @@ function BlockEdit(props: {
 		middleware: [
 			offset(10),
 			flip({ fallbackAxisSideDirection: "start", crossAxis: false }),
-			shift({ limiter: limitShift({ offset: 200 }) }),
+			shift({ limiter: limitShift({ offset: 200 }), padding: 64 }),
+			arrow({
+				element: arrowRef,
+				padding: 32,
+			}),
 		],
 		whileElementsMounted: autoUpdate,
 	});
@@ -458,14 +496,156 @@ function BlockEdit(props: {
 			{isOpen ? (
 				<FloatingFocusManager context={context} modal={false}>
 					<div
-						className={styles.popoverContainer}
 						ref={refs.setFloating}
 						style={floatingStyles}
 						{...getFloatingProps()}
+						className={styles.popover}
 					>
-						<div className={styles.popover}>
-							<h2>edit block</h2>
-							<hr />
+						<FloatingArrow
+							style={{ transform: "translateY(-1px)" }}
+							width={16}
+							height={16}
+							tipRadius={4}
+							fill="#ffffff"
+							stroke="#000000"
+							strokeWidth={4}
+							ref={arrowRef}
+							context={context}
+						/>
+						<h2>edit block</h2>
+						<hr />
+						<div className={styles.popoverInputs}>
+							<label className={styles.entry}>
+								playlist
+								<select
+									defaultValue={props.block.playlist}
+									onChange={(event) => {
+										props.block.playlist =
+											event.target.value;
+										props.updateSettings();
+									}}
+								>
+									{Object.values(library.playlists).map(
+										(playlist) => (
+											<option
+												value={playlist.id}
+												key={playlist.id}
+											>
+												{playlist.name}
+											</option>
+										),
+									)}
+								</select>
+							</label>
+							<div>
+								<label className={styles.entry}>
+									shuffle override
+									<input
+										type="checkbox"
+										checked={getShuffle(props.block)}
+										onChange={(event) => {
+											props.block.shuffleOverride =
+												event.target.checked;
+											props.updateSettings();
+										}}
+									/>
+								</label>
+								{props.block.shuffleOverride != undefined && (
+									<button
+										onClick={() => {
+											props.block.shuffleOverride =
+												undefined;
+											props.updateSettings();
+										}}
+									>
+										remove override
+									</button>
+								)}
+							</div>
+							<label className={styles.entry}>
+								bumper group override
+								<select
+									defaultValue={
+										props.block.bumperGroupOverride
+									}
+									onChange={(event) => {
+										props.block.bumperGroupOverride =
+											event.target.value == "unset"
+												? undefined
+												: event.target.value;
+										props.updateSettings();
+									}}
+								>
+									<option value="unset">unset</option>
+									{Object.values(library.bumperGroups).map(
+										(bumperGroup) => (
+											<option
+												value={bumperGroup.id}
+												key={bumperGroup.id}
+											>
+												{bumperGroup.name}
+											</option>
+										),
+									)}
+								</select>
+							</label>
+							<label className={styles.entry}>
+								bumper interval override
+								<input
+									type="number"
+									value={
+										props.block.bumperIntervalOverride ?? ""
+									}
+									min={0}
+									max={10}
+									onChange={(event) => {
+										props.block.bumperIntervalOverride =
+											event.target.value == ""
+												? undefined
+												: parseInt(event.target.value);
+										props.updateSettings();
+									}}
+								/>
+								{props.block.bumperIntervalOverride !=
+								undefined ? (
+									<button
+										onClick={() => {
+											props.block.bumperIntervalOverride =
+												undefined;
+											props.updateSettings();
+										}}
+									>
+										remove override
+									</button>
+								) : undefined}
+							</label>
+							<label className={styles.entry}>
+								number of bumpers override
+								<input
+									type="number"
+									value={props.block.numBumpersOverride ?? ""}
+									min={0}
+									max={10}
+									onChange={(event) => {
+										props.block.numBumpersOverride =
+											event.target.value == ""
+												? undefined
+												: parseInt(event.target.value);
+										props.updateSettings();
+									}}
+								/>
+								{props.block.numBumpersOverride != undefined ? (
+									<button
+										onClick={() => {
+											props.block.numBumpersOverride =
+												undefined;
+											props.updateSettings();
+										}}
+									>
+										remove override
+									</button>
+								) : undefined}
+							</label>
 							<button
 								onClick={() => {
 									props.setPressedBlock(undefined);

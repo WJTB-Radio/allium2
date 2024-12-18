@@ -106,3 +106,21 @@ input,
 select {
 	margin-left: 8px;
 }
+
+input {
+	min-width: 20ch;
+	field-sizing: content;
+}
+
+input[type="checkbox"] {
+	min-width: 32px;
+}
+
+input[type="color"] {
+	min-width: 64px;
+}
+
+input[type="number"] {
+	min-width: 10ch;
+	field-sizing: fixed;
+}
