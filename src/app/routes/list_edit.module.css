@@ -1,6 +1,6 @@
 .entry {
 	display: flex;
-	gap: 0.5rem;
+	gap: 8px;
 }
 
 .entry > input {
@@ -9,11 +9,11 @@
 }
 
 input[type="checkbox"] {
-	min-width: 2rem;
+	min-width: 32px;
 }
 
 input[type="color"] {
-	min-width: 4rem;
+	min-width: 64px;
 }
 
 input[type="number"] {

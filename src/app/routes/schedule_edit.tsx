@@ -9,11 +9,25 @@ import {
 	getSchedules,
 	globalSettingsSignal,
 	library,
+	Schedule,
 } from "../schedule";
 import { generateId } from "../util/id_generator";
 import { useSignal } from "../util/signal";
 import { formatIntWithMinDigits } from "../util/format";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import {
+	autoUpdate,
+	flip,
+	FloatingFocusManager,
+	limitShift,
+	offset,
+	shift,
+	useClick,
+	useDismiss,
+	useFloating,
+	useInteractions,
+	useRole,
+} from "@floating-ui/react";
 
 export const Route = createFileRoute("/schedule_edit")({
 	component: ScheduleEdit,
@@ -55,6 +69,9 @@ export function ScheduleEdit() {
 	const [pressedBlock, setPressedBlock] = useState<Block | undefined>(
 		undefined,
 	);
+	const [dragStartX, setDragStartX] = useState(0);
+	const [dragStartY, setDragStartY] = useState(0);
+	const [isDragging, setIsDragging] = useState(false);
 	const [dragY, setDragY] = useState(0);
 	const [draggedEdge, setDraggedEdge] = useState<number | undefined>(
 		undefined,
@@ -104,8 +121,14 @@ export function ScheduleEdit() {
 		);
 	}
 
+	const dragThreshold = 10;
 	function handleMouseMove(event: React.MouseEvent) {
 		if (pressedBlock == undefined) return;
+		const dx = event.clientX - dragStartX;
+		const dy = event.clientY - dragStartY;
+		if (dx * dx + dy * dy > dragThreshold * dragThreshold) {
+			setIsDragging(true);
+		}
 		const day = Math.floor(pressedBlock.startsAt / (24 * 60 * 60 * 1000));
 		const initialStartsAt = pressedBlock.startsAt;
 		const initialEndsAt = pressedBlock.endsAt;
@@ -226,11 +249,11 @@ export function ScheduleEdit() {
 						delete schedule
 					</button>
 					<hr />
-					<p>
-						left click drag to move blocks. left click to set a
-						block's playlist. right click empty space to create a
-						block.
-					</p>
+					<ul>
+						<li>right click empty space to create a block</li>
+						<li>drag to move blocks</li>
+						<li>click to edit a block</li>
+					</ul>
 					<hr />
 					<div className={styles.dayNames}>
 						{[...Array(7).keys()].map((day) => (
@@ -317,45 +340,22 @@ export function ScheduleEdit() {
 												(day + 1) * 24 * 60 * 60 * 1000,
 									)
 									.map((block) => (
-										<div
+										<BlockEdit
 											key={block.id}
-											className={`${styles.block} ${pressedBlock == block && draggedEdge == undefined ? styles.selected : ""}`}
-											style={{
-												top: `${100 * ((block.startsAt - day * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000))}%`,
-												height: `${100 * ((block.endsAt - block.startsAt) / (24 * 60 * 60 * 1000))}%`,
-												backgroundColor: `${getPlaylist(block)?.color}aa`,
-											}}
-											onMouseDown={(event) => {
-												event.stopPropagation();
-												setDragY(
-													event.nativeEvent.offsetY,
-												);
-												setPressedBlock(block);
-											}}
-											onClick={(event) => {
-												event.stopPropagation();
-											}}
-										>
-											{getPlaylist(block)?.name ?? ""}
-											<div
-												className={`${styles.topResize} ${pressedBlock == block && draggedEdge == 0 ? styles.selected : undefined}`}
-												onMouseDown={(event) => {
-													event.stopPropagation();
-													setDragY(0);
-													setDraggedEdge(0);
-													setPressedBlock(block);
-												}}
-											/>
-											<div
-												className={`${styles.bottomResize} ${pressedBlock == block && draggedEdge == 1 ? styles.selected : undefined}`}
-												onMouseDown={(event) => {
-													event.stopPropagation();
-													setDragY(0);
-													setDraggedEdge(1);
-													setPressedBlock(block);
-												}}
-											/>
-										</div>
+											updateSettings={updateSettings}
+											schedule={schedule}
+											block={block}
+											pressedBlock={pressedBlock}
+											draggedEdge={draggedEdge}
+											isDragging={isDragging}
+											setIsDragging={setIsDragging}
+											setDragStartX={setDragStartX}
+											setDragStartY={setDragStartY}
+											day={day}
+											setDragY={setDragY}
+											setPressedBlock={setPressedBlock}
+											setDraggedEdge={setDraggedEdge}
+										/>
 									))}
 							</div>
 						))}
@@ -363,5 +363,127 @@ export function ScheduleEdit() {
 				</>
 			) : undefined}
 		</div>
+	);
+}
+
+function BlockEdit(props: {
+	block: Block;
+	pressedBlock: Block | undefined;
+	draggedEdge: number | undefined;
+	day: number;
+	isDragging: boolean;
+	setIsDragging: Dispatch<SetStateAction<boolean>>;
+	setDragY: Dispatch<SetStateAction<number>>;
+	setDragStartX: Dispatch<SetStateAction<number>>;
+	setDragStartY: Dispatch<SetStateAction<number>>;
+	setPressedBlock: Dispatch<SetStateAction<Block | undefined>>;
+	setDraggedEdge: Dispatch<SetStateAction<number | undefined>>;
+	schedule: Schedule;
+	updateSettings: () => void;
+}) {
+	const [isOpen, setIsOpen] = useState(false);
+	if (props.isDragging && isOpen) setIsOpen(false);
+	const { refs, floatingStyles, context } = useFloating({
+		placement: "right",
+		open: isOpen,
+		onOpenChange: (o) => {
+			if (!props.isDragging) setIsOpen(o);
+		},
+		middleware: [
+			offset(10),
+			flip({ fallbackAxisSideDirection: "start", crossAxis: false }),
+			shift({ limiter: limitShift({ offset: 200 }) }),
+		],
+		whileElementsMounted: autoUpdate,
+	});
+
+	const click = useClick(context);
+	const dismiss = useDismiss(context);
+	const role = useRole(context);
+
+	const { getReferenceProps, getFloatingProps } = useInteractions([
+		click,
+		dismiss,
+		role,
+	]);
+
+	return (
+		<>
+			<div
+				ref={refs.setReference}
+				{...getReferenceProps()}
+				className={`${styles.block} ${props.pressedBlock == props.block && props.draggedEdge == undefined ? styles.selected : ""}`}
+				style={{
+					top: `${100 * ((props.block.startsAt - props.day * 24 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000))}%`,
+					height: `${100 * ((props.block.endsAt - props.block.startsAt) / (24 * 60 * 60 * 1000))}%`,
+					backgroundColor: `${getPlaylist(props.block)?.color}aa`,
+				}}
+				onMouseDown={(event) => {
+					event.stopPropagation();
+					props.setDragY(event.nativeEvent.offsetY);
+					props.setIsDragging(false);
+					props.setDragStartX(event.clientX);
+					props.setDragStartY(event.clientY);
+					props.setPressedBlock(props.block);
+				}}
+			>
+				{getPlaylist(props.block)?.name ?? ""}
+				<div
+					className={`${styles.topResize} ${props.pressedBlock == props.block && props.draggedEdge == 0 ? styles.selected : undefined}`}
+					onMouseDown={(event) => {
+						event.stopPropagation();
+						props.setDragY(0);
+						props.setIsDragging(false);
+						props.setDragStartX(event.clientX);
+						props.setDragStartY(event.clientY);
+						props.setDraggedEdge(0);
+						props.setPressedBlock(props.block);
+					}}
+					onClick={(event) => event.stopPropagation()}
+				/>
+				<div
+					className={`${styles.bottomResize} ${props.pressedBlock == props.block && props.draggedEdge == 1 ? styles.selected : undefined}`}
+					onMouseDown={(event) => {
+						event.stopPropagation();
+						props.setDragY(0);
+						props.setIsDragging(false);
+						props.setDragStartX(event.clientX);
+						props.setDragStartY(event.clientY);
+						props.setDraggedEdge(1);
+						props.setPressedBlock(props.block);
+					}}
+					onClick={(event) => event.stopPropagation()}
+				/>
+			</div>
+			{isOpen ? (
+				<FloatingFocusManager context={context} modal={false}>
+					<div
+						className={styles.popoverContainer}
+						ref={refs.setFloating}
+						style={floatingStyles}
+						{...getFloatingProps()}
+					>
+						<div className={styles.popover}>
+							<h2>edit block</h2>
+							<hr />
+							<button
+								onClick={() => {
+									props.setPressedBlock(undefined);
+									setIsOpen(false);
+									props.schedule.blocks =
+										props.schedule.blocks.filter(
+											(block) =>
+												block.id != props.block.id,
+										);
+									props.updateSettings();
+								}}
+							>
+								delete
+							</button>
+						</div>
+					</div>
+				</FloatingFocusManager>
+			) : undefined}
+		</>
 	);
 }

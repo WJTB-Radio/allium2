@@ -32,6 +32,7 @@ export function DJ() {
 		<div className="centerContainer">
 			<h1>allium :D</h1>
 			<p>allium plays music when noone's show is on.</p>
+			<hr />
 			{playing != "" ? (
 				<>
 					{fadeOnSongEnd != undefined ? (
@@ -108,6 +109,7 @@ export function DJ() {
 					</tbody>
 				</table>
 			)}
+			<hr />
 			<div className={styles.nowPlaying}>
 				<h2>now playing</h2>
 				{playing && playing != "" ? (

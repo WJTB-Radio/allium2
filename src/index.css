@@ -30,7 +30,7 @@ body {
 }
 
 #app {
-	margin: 1rem;
+	margin: 16px;
 	position: relative;
 	flex-grow: 1;
 }
@@ -67,6 +67,12 @@ hr {
 	min-height: 1px;
 	width: 100%;
 	border: 1px solid black;
+	margin: 16px 0;
+}
+
+p,
+ul {
+	margin: 0;
 }
 
 a {
@@ -81,7 +87,7 @@ a {
 	margin: 0 auto;
 	max-width: 70ch;
 	width: 70ch;
-	padding: 2rem;
+	padding: 32px;
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
@@ -89,5 +95,5 @@ a {
 
 nav {
 	display: flex;
-	gap: 1rem;
+	gap: 16px;
 }

@@ -43,6 +43,7 @@
 		"email": "wjtb@njit.edu"
 	},
 	"dependencies": {
+		"@floating-ui/react": "^0.27.2",
 		"@tanstack/react-router": "^1.87.7",
 		"electron-squirrel-startup": "^1.0.1",
 		"glob": "^11.0.0",

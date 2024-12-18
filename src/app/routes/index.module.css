@@ -5,7 +5,7 @@
 .fadeOutWarning {
 	display: flex;
 	flex-wrap: wrap;
-	margin: 1rem 0;
+	margin: 16px 0;
 }
 
 .nowPlaying p,
@@ -15,7 +15,7 @@
 
 .upNext,
 .nowPlaying {
-	margin-top: 1rem;
+	margin-top: 16px;
 }
 
 .song {
