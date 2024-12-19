@@ -1,6 +1,6 @@
+import styles from "./schedule_edit.module.css";
 import { createFileRoute } from "@tanstack/react-router";
 import { beforeLoadAuth } from "../auth";
-import styles from "./schedule_edit.module.css";
 import {
 	Block,
 	getDefaultPlaylist,
@@ -189,7 +189,7 @@ export function ScheduleEdit() {
 
 	return (
 		<div className={styles.container} onMouseMove={handleMouseMove}>
-			<div>
+			<div className="entry">
 				{hasSchedules ? (
 					<label>
 						pick a schedule to edit
@@ -229,58 +229,63 @@ export function ScheduleEdit() {
 			<hr />
 			{schedule != undefined ? (
 				<>
-					<label>
-						name
-						<input
-							value={schedule.name}
-							onChange={(event) => {
-								schedule.name = event.target.value;
+					<div className="entry">
+						<label>
+							name
+							<input
+								value={schedule.name}
+								onChange={(event) => {
+									schedule.name = event.target.value;
+									updateSettings();
+								}}
+							></input>
+						</label>
+						<button
+							onClick={() => {
+								delete library.schedules[schedule.id];
+								setSelectedSchedule(defaultScheduleId);
+								if (library.selectedSchedule == schedule.id) {
+									library.selectedSchedule =
+										defaultScheduleId;
+								}
 								updateSettings();
 							}}
-						></input>
-					</label>
-					<button
-						onClick={() => {
-							delete library.schedules[schedule.id];
-							setSelectedSchedule(defaultScheduleId);
-							if (library.selectedSchedule == schedule.id) {
-								library.selectedSchedule = defaultScheduleId;
-							}
-							updateSettings();
-						}}
-					>
-						delete schedule
-					</button>
-					<button
-						onClick={() => {
-							const id = generateId("schedule", schedules);
-							library.schedules[id] = {
-								id,
-								name: `copy of ${schedule.name}`,
-								// need to make sure new blocks dont have the same ids
-								blocks: schedule.blocks.reduce(
-									(blocks, block) => {
-										blocks.push({
-											...block,
-											id: generateId(
-												"block",
-												schedule.blocks.concat(blocks),
-											),
-										});
-										return blocks;
-									},
-									[] as Block[],
-								),
-							};
-							setSelectedSchedule(id);
-							if (library.selectedSchedule == undefined) {
-								library.selectedSchedule = id;
-							}
-							updateSettings();
-						}}
-					>
-						copy schedule
-					</button>
+						>
+							delete schedule
+						</button>
+						<button
+							onClick={() => {
+								const id = generateId("schedule", schedules);
+								library.schedules[id] = {
+									id,
+									name: `copy of ${schedule.name}`,
+									// need to make sure new blocks dont have the same ids
+									blocks: schedule.blocks.reduce(
+										(blocks, block) => {
+											blocks.push({
+												...block,
+												id: generateId(
+													"block",
+													schedule.blocks.concat(
+														blocks,
+													),
+												),
+											});
+											return blocks;
+										},
+										[] as Block[],
+									),
+								};
+								setSelectedSchedule(id);
+								if (library.selectedSchedule == undefined) {
+									library.selectedSchedule = id;
+								}
+								updateSettings();
+							}}
+						>
+							copy schedule
+						</button>
+					</div>
 					<hr />
 					<ul>
 						<li>right click empty space to create a block</li>
@@ -514,7 +519,7 @@ function BlockEdit(props: {
 						/>
 						<h2>edit block</h2>
 						<hr />
-						<div className={styles.popoverInputs}>
+						<div className="entries">
 							<label className={styles.entry}>
 								playlist
 								<select

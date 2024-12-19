@@ -9,7 +9,6 @@ import {
 import { generateId } from "../util/id_generator";
 import { joinPaths, removePathPrefix } from "../util/path";
 import { useSignal } from "../util/signal";
-import styles from "./list_edit.module.css";
 import { beforeLoadAuth } from "../auth";
 import { Fragment } from "react/jsx-runtime";
 
@@ -60,8 +59,8 @@ export function Bumpers() {
 function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
-		<div>
-			<label className={styles.entry}>
+		<div className="entries">
+			<label className="entry">
 				name
 				<input
 					onChange={(event) => {
@@ -71,7 +70,7 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 					defaultValue={props.bumperGroup.name}
 				/>
 			</label>
-			<div className={styles.entry}>
+			<div className="entry">
 				<span>
 					{joinPaths(
 						globalSettings.libraryPath ?? "",
@@ -95,7 +94,7 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 					select directory
 				</button>
 			</div>
-			<label className={styles.entry}>
+			<label className="entry">
 				number of bumpers override
 				<input
 					type="number"
@@ -121,7 +120,7 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 					</button>
 				) : undefined}
 			</label>
-			<label className={styles.entry}>
+			<label className="entry">
 				bumper interval override
 				<input
 					type="number"
@@ -148,7 +147,7 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 					</button>
 				) : undefined}
 			</label>
-			<button className={styles.entry} onClick={props.remove}>
+			<button className="entry" onClick={props.remove}>
 				delete
 			</button>
 		</div>

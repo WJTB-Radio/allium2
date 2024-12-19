@@ -15,18 +15,22 @@ export function GlobalSettings() {
 		<div className="centerContainer">
 			<h1>settings</h1>
 			<hr />
-			<p>library path: {globalSettings.libraryPath}</p>
-			<button
-				onClick={async () => {
-					const selected = await selectDirectory("");
-					if (selected == undefined) return;
-					globalSettings.libraryPath = selected;
-					await load({ settings: false, library: true });
-					updateSettings();
-				}}
-			>
-				set library path
-			</button>
+			<div className="entries">
+				<div className="entry">
+					library path: {globalSettings.libraryPath}
+					<button
+						onClick={async () => {
+							const selected = await selectDirectory("");
+							if (selected == undefined) return;
+							globalSettings.libraryPath = selected;
+							await load({ settings: false, library: true });
+							updateSettings();
+						}}
+					>
+						set library path
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }

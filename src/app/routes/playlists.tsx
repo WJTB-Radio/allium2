@@ -9,7 +9,6 @@ import {
 import { generateId } from "../util/id_generator";
 import { joinPaths, removePathPrefix } from "../util/path";
 import { useSignal } from "../util/signal";
-import styles from "./list_edit.module.css";
 import { beforeLoadAuth } from "../auth";
 import { Fragment } from "react/jsx-runtime";
 
@@ -67,8 +66,8 @@ export function Playlists() {
 function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 	const updateSettings = useSignal(globalSettingsSignal);
 	return (
-		<div>
-			<label className={styles.entry}>
+		<div className="entries">
+			<label className="entry">
 				name
 				<input
 					onChange={(event) => {
@@ -78,7 +77,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					defaultValue={props.playlist.name}
 				/>
 			</label>
-			<label className={styles.entry}>
+			<label className="entry">
 				color
 				<input
 					type="color"
@@ -89,7 +88,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					}}
 				/>
 			</label>
-			<label className={styles.entry}>
+			<label className="entry">
 				shuffle
 				<input
 					type="checkbox"
@@ -100,7 +99,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					}}
 				/>
 			</label>
-			<div className={styles.entry}>
+			<div className="entry">
 				<span>
 					{joinPaths(
 						globalSettings.libraryPath ?? "",
@@ -124,7 +123,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					select directory
 				</button>
 			</div>
-			<label className={styles.entry}>
+			<label className="entry">
 				bumper group
 				<select
 					defaultValue={props.playlist.bumperGroup}
@@ -140,7 +139,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					))}
 				</select>
 			</label>
-			<label className={styles.entry}>
+			<label className="entry">
 				number of bumpers override
 				<input
 					type="number"
@@ -166,7 +165,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					</button>
 				) : undefined}
 			</label>
-			<label className={styles.entry}>
+			<label className="entry">
 				bumper interval override
 				<input
 					type="number"
@@ -192,7 +191,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					</button>
 				) : undefined}
 			</label>
-			<button className={styles.entry} onClick={props.remove}>
+			<button className="entry" onClick={props.remove}>
 				delete
 			</button>
 		</div>
