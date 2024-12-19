@@ -132,12 +132,20 @@ export async function load(what?: { library: boolean; settings: boolean }) {
 	loaded = true;
 }
 
-export async function save() {
+let saveTimeout: undefined | number = undefined;
+async function save() {
 	if (!loaded) return;
-	await saveSettings(globalSettings);
-	if (globalSettings?.libraryPath) {
-		await saveLibrary(globalSettings.libraryPath, library);
+	if (saveTimeout != undefined) {
+		clearTimeout(saveTimeout);
+		saveTimeout = undefined;
 	}
+	saveTimeout = window.setTimeout(async () => {
+		saveTimeout = undefined;
+		await saveSettings(globalSettings);
+		if (globalSettings?.libraryPath) {
+			await saveLibrary(globalSettings.libraryPath, library);
+		}
+	}, 5000);
 }
 
 export function Schedule() {
