@@ -31,6 +31,12 @@ import {
 	useInteractions,
 	useRole,
 } from "@floating-ui/react";
+import {
+	BumperGroupSelect,
+	PlaylistSelect,
+	ScheduleSelect,
+} from "../entries/select";
+import { OverrideEntry } from "../entries/override_entry";
 
 export const Route = createFileRoute("/schedule_edit")({
 	component: ScheduleEdit,
@@ -191,21 +197,14 @@ export function ScheduleEdit() {
 		<div className={styles.container} onMouseMove={handleMouseMove}>
 			<div className="entry">
 				{hasSchedules ? (
-					<label>
+					<ScheduleSelect
+						defaultValue={schedule?.id}
+						onChange={(schedule) => {
+							setSelectedSchedule(schedule);
+						}}
+					>
 						pick a schedule to edit
-						<select
-							value={schedule?.id ?? ""}
-							onChange={(event) => {
-								setSelectedSchedule(event.target.value);
-							}}
-						>
-							{scheduleIds.map((id) => (
-								<option key={id} value={id}>
-									{schedules[id].name}
-								</option>
-							))}
-						</select>
-					</label>
+					</ScheduleSelect>
 				) : undefined}
 				<button
 					onClick={() => {
@@ -225,7 +224,6 @@ export function ScheduleEdit() {
 					new schedule
 				</button>
 			</div>
-
 			<hr />
 			{schedule != undefined ? (
 				<>
@@ -513,144 +511,71 @@ function BlockEdit(props: {
 							tipRadius={4}
 							fill="#ffffff"
 							stroke="#000000"
-							strokeWidth={4}
+							strokeWidth={2}
 							ref={arrowRef}
 							context={context}
 						/>
 						<h2>edit block</h2>
 						<hr />
 						<div className="entries">
-							<label className={styles.entry}>
+							<PlaylistSelect
+								optional={false}
+								defaultValue={props.block.playlist}
+								onChange={(value) => {
+									props.block.playlist = value;
+									props.updateSettings();
+								}}
+							>
 								playlist
-								<select
-									defaultValue={props.block.playlist}
-									onChange={(event) => {
-										props.block.playlist =
-											event.target.value;
-										props.updateSettings();
-									}}
-								>
-									{Object.values(library.playlists).map(
-										(playlist) => (
-											<option
-												value={playlist.id}
-												key={playlist.id}
-											>
-												{playlist.name}
-											</option>
-										),
-									)}
-								</select>
-							</label>
-							<div>
-								<label className={styles.entry}>
-									shuffle override
-									<input
-										type="checkbox"
-										checked={getShuffle(props.block)}
-										onChange={(event) => {
-											props.block.shuffleOverride =
-												event.target.checked;
-											props.updateSettings();
-										}}
-									/>
-								</label>
-								{props.block.shuffleOverride != undefined && (
-									<button
-										onClick={() => {
-											props.block.shuffleOverride =
-												undefined;
-											props.updateSettings();
-										}}
-									>
-										remove override
-									</button>
-								)}
-							</div>
-							<label className={styles.entry}>
+							</PlaylistSelect>
+							<OverrideEntry
+								defaultValue={props.block.shuffleOverride}
+								fallback={getShuffle(props.block)}
+								type="boolean"
+								onChange={(value) => {
+									props.block.shuffleOverride = value;
+									props.updateSettings();
+								}}
+							>
+								shuffle override
+							</OverrideEntry>
+							<BumperGroupSelect
+								optional={true}
+								defaultValue={props.block.bumperGroupOverride}
+								onChange={(value) => {
+									props.block.bumperGroupOverride = value;
+									props.updateSettings();
+								}}
+							>
 								bumper group override
-								<select
-									defaultValue={
-										props.block.bumperGroupOverride
-									}
-									onChange={(event) => {
-										props.block.bumperGroupOverride =
-											event.target.value == "unset"
-												? undefined
-												: event.target.value;
-										props.updateSettings();
-									}}
-								>
-									<option value="unset">unset</option>
-									{Object.values(library.bumperGroups).map(
-										(bumperGroup) => (
-											<option
-												value={bumperGroup.id}
-												key={bumperGroup.id}
-											>
-												{bumperGroup.name}
-											</option>
-										),
-									)}
-								</select>
-							</label>
-							<label className={styles.entry}>
+							</BumperGroupSelect>
+							<OverrideEntry
+								type="number"
+								defaultValue={
+									props.block.bumperIntervalOverride
+								}
+								onChange={(newValue) => {
+									props.block.bumperIntervalOverride =
+										newValue;
+									props.updateSettings();
+								}}
+								min={0}
+								max={10}
+							>
 								bumper interval override
-								<input
-									type="number"
-									value={
-										props.block.bumperIntervalOverride ?? ""
-									}
-									min={0}
-									max={10}
-									onChange={(event) => {
-										props.block.bumperIntervalOverride =
-											event.target.value == ""
-												? undefined
-												: parseInt(event.target.value);
-										props.updateSettings();
-									}}
-								/>
-								{props.block.bumperIntervalOverride !=
-								undefined ? (
-									<button
-										onClick={() => {
-											props.block.bumperIntervalOverride =
-												undefined;
-											props.updateSettings();
-										}}
-									>
-										remove override
-									</button>
-								) : undefined}
-							</label>
-							<label className={styles.entry}>
-								number of bumpers override
-								<input
-									type="number"
-									value={props.block.numBumpersOverride ?? ""}
-									min={0}
-									max={10}
-									onChange={(event) => {
-										props.block.numBumpersOverride =
-											event.target.value == ""
-												? undefined
-												: parseInt(event.target.value);
-										props.updateSettings();
-									}}
-								/>
-								{props.block.numBumpersOverride != undefined ? (
-									<button
-										onClick={() => {
-											props.block.numBumpersOverride =
-												undefined;
-											props.updateSettings();
-										}}
-									>
-										remove override
-									</button>
-								) : undefined}
-							</label>
+							</OverrideEntry>
+							<OverrideEntry
+								type="number"
+								defaultValue={props.block.numBumpersOverride}
+								onChange={(newValue) => {
+									props.block.numBumpersOverride = newValue;
+									props.updateSettings();
+								}}
+								min={0}
+								max={10}
+							>
+								num bumpers override
+							</OverrideEntry>
 							<button
 								onClick={() => {
 									props.setPressedBlock(undefined);

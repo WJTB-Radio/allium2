@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { selectDirectory } from "../ipc";
 import {
 	globalSettings,
 	globalSettingsSignal,
@@ -7,10 +6,12 @@ import {
 	Playlist,
 } from "../schedule";
 import { generateId } from "../util/id_generator";
-import { joinPaths, removePathPrefix } from "../util/path";
 import { useSignal } from "../util/signal";
 import { beforeLoadAuth } from "../auth";
 import { Fragment } from "react/jsx-runtime";
+import { BumperGroupSelect } from "../entries/select";
+import { OverrideEntry } from "../entries/override_entry";
+import { DirectoryEntry } from "../entries/directory_entry";
 
 export const Route = createFileRoute("/playlists")({
 	component: Playlists,
@@ -99,98 +100,50 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 					}}
 				/>
 			</label>
-			<div className="entry">
-				<span>
-					{joinPaths(
-						globalSettings.libraryPath ?? "",
-						props.playlist.directory,
-					)}
-				</span>
-				<button
-					onClick={async () => {
-						const selected = await selectDirectory(
-							globalSettings.libraryPath ?? "",
-						);
-						if (selected == undefined) return;
-						props.playlist.directory =
-							removePathPrefix(
-								globalSettings.libraryPath ?? "",
-								selected,
-							) ?? "";
-						updateSettings();
-					}}
-				>
-					select directory
-				</button>
-			</div>
-			<label className="entry">
+			<DirectoryEntry
+				setValue={(value) => {
+					props.playlist.directory = value;
+					updateSettings();
+				}}
+				root={globalSettings.libraryPath ?? ""}
+				value={props.playlist.directory}
+			>
+				music directory:
+			</DirectoryEntry>
+			<BumperGroupSelect
+				optional={false}
+				defaultValue={props.playlist.bumperGroup}
+				onChange={(value) => {
+					props.playlist.bumperGroup = value;
+					updateSettings();
+				}}
+			>
 				bumper group
-				<select
-					defaultValue={props.playlist.bumperGroup}
-					onChange={(event) => {
-						props.playlist.bumperGroup = event.target.value;
-						updateSettings();
-					}}
-				>
-					{Object.values(library.bumperGroups).map((group) => (
-						<option value={group.id} key={group.id}>
-							{group.name}
-						</option>
-					))}
-				</select>
-			</label>
-			<label className="entry">
-				number of bumpers override
-				<input
-					type="number"
-					value={props.playlist.numBumpersOverride ?? ""}
-					min={0}
-					max={10}
-					onChange={(event) => {
-						props.playlist.numBumpersOverride =
-							event.target.value == ""
-								? undefined
-								: parseInt(event.target.value);
-						updateSettings();
-					}}
-				/>
-				{props.playlist.numBumpersOverride != undefined ? (
-					<button
-						onClick={() => {
-							props.playlist.numBumpersOverride = undefined;
-							updateSettings();
-						}}
-					>
-						remove override
-					</button>
-				) : undefined}
-			</label>
-			<label className="entry">
+			</BumperGroupSelect>
+			<OverrideEntry
+				defaultValue={props.playlist.numBumpersOverride}
+				type={"number"}
+				min={0}
+				max={10}
+				onChange={(value) => {
+					props.playlist.numBumpersOverride = value;
+					updateSettings();
+				}}
+			>
+				num bumpers override
+			</OverrideEntry>
+			<OverrideEntry
+				defaultValue={props.playlist.bumperIntervalOverride}
+				type={"number"}
+				min={0}
+				max={10}
+				onChange={(value) => {
+					props.playlist.bumperIntervalOverride = value;
+					updateSettings();
+				}}
+			>
 				bumper interval override
-				<input
-					type="number"
-					value={props.playlist.bumperIntervalOverride ?? ""}
-					min={0}
-					max={10}
-					onChange={(event) => {
-						props.playlist.bumperIntervalOverride =
-							event.target.value == ""
-								? undefined
-								: parseInt(event.target.value);
-						updateSettings();
-					}}
-				/>
-				{props.playlist.bumperIntervalOverride != undefined ? (
-					<button
-						onClick={() => {
-							props.playlist.bumperIntervalOverride = undefined;
-							updateSettings();
-						}}
-					>
-						remove override
-					</button>
-				) : undefined}
-			</label>
+			</OverrideEntry>
 			<button className="entry" onClick={props.remove}>
 				delete
 			</button>

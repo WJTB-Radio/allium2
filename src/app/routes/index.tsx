@@ -161,7 +161,7 @@ function Login() {
 	}
 
 	return (
-		<form onSubmit={onLogin} className={styles.login}>
+		<form onSubmit={onLogin} className={`entry ${styles.login}`}>
 			<label>
 				password
 				<input name="password" type="password" />

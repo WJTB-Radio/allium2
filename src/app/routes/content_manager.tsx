@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { beforeLoadAuth } from "../auth";
 import { getSchedule, globalSettingsSignal, library } from "../schedule";
 import { useSignal } from "../util/signal";
+import { ScheduleSelect } from "../entries/select";
 
 export const Route = createFileRoute("/content_manager")({
 	component: ContentManager,
@@ -15,28 +16,15 @@ export function ContentManager() {
 			<h1>content management</h1>
 			<hr />
 			{Object.keys(library.schedules).length > 0 ? (
-				<label>
+				<ScheduleSelect
+					defaultValue={getSchedule()?.id}
+					onChange={(schedule) => {
+						library.selectedSchedule = schedule;
+						updateSettings();
+					}}
+				>
 					select active schedule
-					<select
-						value={
-							getSchedule()?.id ??
-							Object.keys(library.schedules)[0] ??
-							""
-						}
-						onChange={(event) => {
-							library.selectedSchedule = event.target.value;
-							updateSettings();
-						}}
-					>
-						{Object.entries(library.schedules).map(
-							([id, schedule]) => (
-								<option key={id} value={id}>
-									{schedule.name}
-								</option>
-							),
-						)}
-					</select>
-				</label>
+				</ScheduleSelect>
 			) : (
 				<p>
 					there are no schedules in the library. please create a

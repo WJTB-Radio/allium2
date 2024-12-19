@@ -11,6 +11,8 @@ import { joinPaths, removePathPrefix } from "../util/path";
 import { useSignal } from "../util/signal";
 import { beforeLoadAuth } from "../auth";
 import { Fragment } from "react/jsx-runtime";
+import { OverrideEntry } from "../entries/override_entry";
+import { DirectoryEntry } from "../entries/directory_entry";
 
 export const Route = createFileRoute("/bumpers")({
 	component: Bumpers,
@@ -70,83 +72,50 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 					defaultValue={props.bumperGroup.name}
 				/>
 			</label>
-			<div className="entry">
-				<span>
-					{joinPaths(
-						globalSettings.libraryPath ?? "",
-						props.bumperGroup.directory,
-					)}
-				</span>
-				<button
-					onClick={async () => {
-						const selected = await selectDirectory(
-							globalSettings.libraryPath ?? "",
-						);
-						if (selected == undefined) return;
-						props.bumperGroup.directory =
-							removePathPrefix(
-								globalSettings.libraryPath ?? "",
-								selected,
-							) ?? "";
-						updateSettings();
-					}}
-				>
-					select directory
-				</button>
-			</div>
-			<label className="entry">
-				number of bumpers override
-				<input
-					type="number"
-					value={props.bumperGroup.numBumpersOverride ?? ""}
-					min={0}
-					max={10}
-					onChange={(event) => {
+			<DirectoryEntry
+				root={globalSettings.libraryPath ?? ""}
+				value={props.bumperGroup.directory}
+				setValue={(value) => {
+					props.bumperGroup.directory = value;
+					updateSettings();
+				}}
+			>
+				bumper path:
+			</DirectoryEntry>
+			<OverrideEntry
+				defaultValue={props.bumperGroup.numBumpersOverride}
+				type="number"
+				min={0}
+				max={10}
+				onChange={(newValue) => {
+					if (newValue == undefined) {
+						props.bumperGroup.numBumpersOverride = undefined;
+					} else {
 						props.bumperGroup.numBumpersOverride =
-							event.target.value == ""
-								? undefined
-								: parseInt(event.target.value);
-						updateSettings();
-					}}
-				/>
-				{props.bumperGroup.numBumpersOverride != undefined ? (
-					<button
-						onClick={() => {
-							props.bumperGroup.numBumpersOverride = undefined;
-							updateSettings();
-						}}
-					>
-						remove override
-					</button>
-				) : undefined}
-			</label>
-			<label className="entry">
-				bumper interval override
-				<input
-					type="number"
-					value={props.bumperGroup.bumperIntervalOverride ?? ""}
-					min={0}
-					max={10}
-					onChange={(event) => {
+							newValue as number;
+					}
+					updateSettings();
+				}}
+			>
+				num bumpers override
+			</OverrideEntry>
+			<OverrideEntry
+				defaultValue={props.bumperGroup.bumperIntervalOverride}
+				type="number"
+				min={0}
+				max={10}
+				onChange={(newValue) => {
+					if (newValue == undefined) {
+						props.bumperGroup.bumperIntervalOverride = undefined;
+					} else {
 						props.bumperGroup.bumperIntervalOverride =
-							event.target.value == ""
-								? undefined
-								: parseInt(event.target.value);
-						updateSettings();
-					}}
-				/>
-				{props.bumperGroup.bumperIntervalOverride != undefined ? (
-					<button
-						onClick={() => {
-							props.bumperGroup.bumperIntervalOverride =
-								undefined;
-							updateSettings();
-						}}
-					>
-						remove override
-					</button>
-				) : undefined}
-			</label>
+							newValue as number;
+					}
+					updateSettings();
+				}}
+			>
+				bumper interval override
+			</OverrideEntry>
 			<button className="entry" onClick={props.remove}>
 				delete
 			</button>

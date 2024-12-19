@@ -3,6 +3,7 @@ import { selectDirectory } from "../ipc";
 import { globalSettings, globalSettingsSignal, load } from "../schedule";
 import { useSignal } from "../util/signal";
 import { beforeLoadAuth } from "../auth";
+import { DirectoryEntry } from "../entries/directory_entry";
 
 export const Route = createFileRoute("/global_settings")({
 	component: GlobalSettings,
@@ -16,20 +17,17 @@ export function GlobalSettings() {
 			<h1>settings</h1>
 			<hr />
 			<div className="entries">
-				<div className="entry">
-					library path: {globalSettings.libraryPath}
-					<button
-						onClick={async () => {
-							const selected = await selectDirectory("");
-							if (selected == undefined) return;
-							globalSettings.libraryPath = selected;
-							await load({ settings: false, library: true });
-							updateSettings();
-						}}
-					>
-						set library path
-					</button>
-				</div>
+				<DirectoryEntry
+					root={""}
+					value={globalSettings.libraryPath ?? ""}
+					setValue={async (value) => {
+						globalSettings.libraryPath = value;
+						await load({ settings: false, library: true });
+						updateSettings();
+					}}
+				>
+					library path:
+				</DirectoryEntry>
 			</div>
 		</div>
 	);
