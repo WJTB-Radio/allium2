@@ -138,14 +138,22 @@ export function ScheduleEdit() {
 		if (dx * dx + dy * dy > dragThreshold * dragThreshold) {
 			setIsDragging(true);
 		}
-		const day = Math.floor(pressedBlock.startsAt / (24 * 60 * 60 * 1000));
 		const initialStartsAt = pressedBlock.startsAt;
 		const initialEndsAt = pressedBlock.endsAt;
 		let startsAt = initialStartsAt;
 		let endsAt = initialEndsAt;
-		const top = days[day].current?.getBoundingClientRect().top ?? 0;
 		const length = endsAt - startsAt;
 		if (draggedEdge == undefined) {
+			const day = days.findIndex((day) =>
+				day.current
+					? event.clientX >
+							day.current.getBoundingClientRect().left &&
+						event.clientX <
+							day.current.getBoundingClientRect().right
+					: false,
+			);
+			if (day == -1) return;
+			const top = days[day].current?.getBoundingClientRect().top ?? 0;
 			const ratio = Math.min(
 				Math.max(
 					(event.clientY - top - dragY) /
@@ -160,6 +168,10 @@ export function ScheduleEdit() {
 			startsAt = time;
 			endsAt = time + length;
 		} else {
+			const day = Math.floor(
+				pressedBlock.startsAt / (24 * 60 * 60 * 1000),
+			);
+			const top = days[day].current?.getBoundingClientRect().top ?? 0;
 			const ratio = Math.min(
 				Math.max(
 					(event.clientY - top) /
