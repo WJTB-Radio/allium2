@@ -103,7 +103,7 @@ function BumperEdit(props: { bumperGroup: BumperGroup; remove: () => void }) {
 				defaultValue={props.bumperGroup.bumperIntervalOverride}
 				type="number"
 				min={0}
-				max={10}
+				max={30}
 				onChange={(newValue) => {
 					if (newValue == undefined) {
 						props.bumperGroup.bumperIntervalOverride = undefined;

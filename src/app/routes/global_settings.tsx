@@ -28,6 +28,38 @@ export function GlobalSettings() {
 				>
 					library path:
 				</DirectoryEntry>
+				<label className="entry">
+					num bumpers
+					<input
+						type="number"
+						min={0}
+						max={10}
+						value={globalSettings.numBumpers}
+						onChange={(event) => {
+							globalSettings.numBumpers =
+								event.target.value == ""
+									? 1
+									: parseInt(event.target.value);
+							updateSettings();
+						}}
+					/>
+				</label>
+				<label className="entry">
+					bumper interval
+					<input
+						type="number"
+						min={0}
+						max={30}
+						value={globalSettings.bumperInterval}
+						onChange={(event) => {
+							globalSettings.bumperInterval =
+								event.target.value == ""
+									? 4
+									: parseInt(event.target.value);
+							updateSettings();
+						}}
+					/>
+				</label>
 			</div>
 		</div>
 	);

@@ -572,7 +572,7 @@ function BlockEdit(props: {
 									props.updateSettings();
 								}}
 								min={0}
-								max={10}
+								max={30}
 							>
 								bumper interval override
 							</OverrideEntry>

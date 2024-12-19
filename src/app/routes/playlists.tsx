@@ -136,7 +136,7 @@ function PlaylistEdit(props: { playlist: Playlist; remove: () => void }) {
 				defaultValue={props.playlist.bumperIntervalOverride}
 				type={"number"}
 				min={0}
-				max={10}
+				max={30}
 				onChange={(value) => {
 					props.playlist.bumperIntervalOverride = value;
 					updateSettings();
