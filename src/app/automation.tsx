@@ -38,10 +38,12 @@ let bumpersPlayed = 0;
 let crossfadeTimeout: number | undefined;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
+		retryLater();
 		return { audio: undefined, name: "" };
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
+		retryLater();
 		return { audio: undefined, name: "" };
 	}
 	const block = getCurrentBlock();
@@ -59,6 +61,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		const playlist = getPlaylist(block);
 		if (!playlist) {
 			console.error("missing playlist");
+			retryLater();
 			return { audio: undefined, name: "" };
 		}
 		const songs = await getSongsInDirectory(
@@ -84,6 +87,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
 			console.error("missing bumper group");
+			retryLater();
 			return { audio: undefined, name: "" };
 		}
 		const bumpers = await getSongsInDirectory(
@@ -110,8 +114,17 @@ async function getNextAudio(): Promise<AudioDescription> {
 			name: decodeURIComponent(baseName(selectedFile) ?? ""),
 		};
 	} else {
+		retryLater();
 		return { audio: undefined, name: "" };
 	}
+}
+
+function retryLater() {
+	window.setTimeout(() => {
+		if (!currentAudio.audio) {
+			playNext();
+		}
+	}, 10000);
 }
 
 async function howlEvent(audio: Howl, event: string) {
