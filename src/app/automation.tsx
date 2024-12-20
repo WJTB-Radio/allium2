@@ -119,8 +119,12 @@ async function getNextAudio(): Promise<AudioDescription> {
 	}
 }
 
+let retryTimeout: number | undefined = undefined;
 function retryLater() {
-	window.setTimeout(() => {
+	if (retryTimeout != undefined) {
+		window.clearTimeout(retryTimeout);
+	}
+	retryTimeout = window.setTimeout(() => {
 		if (!currentAudio.audio) {
 			playNext();
 		}
@@ -134,6 +138,10 @@ async function howlEvent(audio: Howl, event: string) {
 }
 
 async function playNext(fadeTime?: number) {
+	if (retryTimeout != undefined) {
+		window.clearTimeout(retryTimeout);
+		retryTimeout = undefined;
+	}
 	if (crossfadeTimeout != undefined) {
 		window.clearTimeout(crossfadeTimeout);
 		crossfadeTimeout = undefined;
