@@ -3,6 +3,7 @@ import {
 	getBumperGroup,
 	getBumperInterval,
 	getCurrentBlock,
+	getNumBumpers,
 	getPlaylist,
 	getShuffle,
 	globalSettings,
@@ -33,6 +34,7 @@ let currentAudio: AudioDescription = { audio: undefined, name: "" };
 let nextAudio: AudioDescription = { audio: undefined, name: "" };
 
 let songsPlayed = 0;
+let bumpersPlayed = 0;
 let crossfadeTimeout: number | undefined;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
@@ -45,8 +47,14 @@ async function getNextAudio(): Promise<AudioDescription> {
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
 	const bumperInterval = getBumperInterval(block);
-	if (bumperInterval == 0 || songsPlayed < bumperInterval) {
+	const numBumpers = getNumBumpers(block);
+	if (
+		bumperInterval == 0 ||
+		numBumpers == 0 ||
+		songsPlayed < bumperInterval
+	) {
 		songsPlayed++;
+		bumpersPlayed = 0;
 		// play a song
 		const playlist = getPlaylist(block);
 		if (!playlist) {
@@ -66,7 +74,12 @@ async function getNextAudio(): Promise<AudioDescription> {
 		}
 		playlist.lastPlayed = selectedFile;
 	} else {
-		songsPlayed = 0;
+		if (bumpersPlayed < numBumpers - 1) {
+			bumpersPlayed++;
+		} else {
+			bumpersPlayed = 0;
+			songsPlayed = 0;
+		}
 		// play a bumper
 		const bumperGroup = getBumperGroup(block);
 		if (!bumperGroup) {
