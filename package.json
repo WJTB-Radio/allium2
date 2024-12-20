@@ -4,6 +4,7 @@
 	"version": "1.0.0",
 	"description": "allium plays music when noone's show is on.",
 	"main": ".vite/build/main.js",
+	"homepage": "https://wjtbradio.com",
 	"scripts": {
 		"start": "electron-forge start",
 		"package": "electron-forge package",

@@ -6,6 +6,13 @@ export function ScheduleSelect(props: {
 	defaultValue: string | undefined;
 	onChange: (schedule: string) => void;
 }) {
+	if (
+		(props.defaultValue == undefined ||
+			(props.defaultValue != undefined &&
+				!(props.defaultValue in library.schedules))) &&
+		Object.keys(library.schedules).length > 0
+	)
+		props.onChange(Object.keys(library.schedules)[0]);
 	return (
 		<label>
 			{props.children}
@@ -37,6 +44,13 @@ export function BumperGroupSelect<O extends boolean>(props: {
 		bumperGroup: O extends true ? string | undefined : string,
 	) => void;
 }) {
+	if (
+		((!props.optional && props.defaultValue == undefined) ||
+			(props.defaultValue != undefined &&
+				!(props.defaultValue in library.bumperGroups))) &&
+		Object.keys(library.bumperGroups).length > 0
+	)
+		props.onChange(Object.keys(library.bumperGroups)[0]);
 	return (
 		<label>
 			{props.children}
@@ -75,6 +89,13 @@ export function PlaylistSelect<O extends boolean>(props: {
 	defaultValue: string | undefined;
 	onChange: (playlist: O extends true ? string | undefined : string) => void;
 }) {
+	if (
+		((!props.optional && props.defaultValue == undefined) ||
+			(props.defaultValue != undefined &&
+				!(props.defaultValue in library.playlists))) &&
+		Object.keys(library.playlists).length > 0
+	)
+		props.onChange(Object.keys(library.playlists)[0]);
 	return (
 		<label>
 			{props.children}

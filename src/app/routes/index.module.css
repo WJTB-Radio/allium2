@@ -5,7 +5,7 @@
 .fadeOutWarning {
 	display: flex;
 	flex-wrap: wrap;
-	margin: 16px 0;
+	margin-bottom: 16px;
 }
 
 .nowPlaying p,
@@ -24,4 +24,36 @@
 
 .time {
 	font-size: 1.25rem;
+}
+
+.banner {
+	position: relative;
+}
+
+.banner {
+	background-image: url("/banner.png");
+	background-size: 100%;
+	color: white;
+	-webkit-text-stroke: 6px white;
+	filter: blur(0.5px);
+}
+
+.banner p {
+	-webkit-text-stroke: 2px white;
+	font-weight: 400;
+	padding-left: 4px;
+	margin-bottom: -6px;
+}
+
+.banner h1 {
+	font-weight: 400;
+}
+
+.title span {
+	-webkit-text-stroke: 4px white;
+}
+
+.title {
+	padding-left: 8px;
+	display: flex;
 }

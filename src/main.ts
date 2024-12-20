@@ -47,8 +47,10 @@ const createWindow = () => {
 		);
 	}
 
-	// Open the DevTools.
-	mainWindow.webContents.openDevTools();
+	if (!app.isPackaged) {
+		// Open the DevTools.
+		mainWindow.webContents.openDevTools();
+	}
 };
 
 // This method will be called when Electron has finished

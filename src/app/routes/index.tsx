@@ -30,8 +30,14 @@ export function DJ() {
 	const forceUpdate = useForceUpdate();
 	return (
 		<div className="centerContainer">
-			<h1>allium :D</h1>
-			<p>allium plays music when noone's show is on.</p>
+			<div className={styles.banner}>
+				<div className={styles.title}>
+					<h1>allium 2</h1>
+					<div className="spacer" />
+					<span>:D</span>
+				</div>
+				<p>allium plays music when noone's show is on.</p>
+			</div>
 			<hr />
 			{playing != "" ? (
 				<>
