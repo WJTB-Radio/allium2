@@ -79,8 +79,7 @@ export function startTuna() {
 					failure_count++;
 				}
 			})
-			.catch((err) => {
-				console.log(err);
+			.catch(() => {
 				failure_count++;
 			});
 	}
