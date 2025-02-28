@@ -13,6 +13,11 @@ const electronAPI = {
 		ipcRenderer.invoke("saveLibrary", path, library),
 	getPlatform: () => ipcRenderer.invoke("getPlatform"),
 	getDebug: () => ipcRenderer.invoke("getDebug"),
+	updatePlaying: (playing: {
+		file?: string;
+		time?: number;
+		duration?: number;
+	}) => ipcRenderer.invoke("updatePlaying", playing),
 };
 
 export type electronAPI = typeof electronAPI;

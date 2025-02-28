@@ -10,7 +10,7 @@ import {
 	globalSettingsSignal,
 	loaded,
 } from "./schedule";
-import { getSongsInDirectory } from "./ipc";
+import { getSongsInDirectory, updateNowPlaying } from "./ipc";
 import { baseName, joinPaths } from "./util/path";
 import { shuffle } from "./util/shuffle";
 import { useEffect, useMemo } from "react";
@@ -28,10 +28,19 @@ const recentlyPlayedSongs: string[] = [];
 interface AudioDescription {
 	audio: Howl | undefined;
 	name: string;
+	url: string | undefined;
 }
 
-let currentAudio: AudioDescription = { audio: undefined, name: "" };
-let nextAudio: AudioDescription = { audio: undefined, name: "" };
+let currentAudio: AudioDescription = {
+	audio: undefined,
+	url: undefined,
+	name: "",
+};
+let nextAudio: AudioDescription = {
+	audio: undefined,
+	url: undefined,
+	name: "",
+};
 
 let songsPlayed = 0;
 let bumpersPlayed = 0;
@@ -39,12 +48,12 @@ let crossfadeTimeout: number | undefined;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
 		retryLater();
-		return { audio: undefined, name: "" };
+		return { audio: undefined, url: undefined, name: "" };
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
 		retryLater();
-		return { audio: undefined, name: "" };
+		return { audio: undefined, url: undefined, name: "" };
 	}
 	const block = getCurrentBlock();
 	let selectedFile: string | undefined;
@@ -62,7 +71,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		if (!playlist) {
 			console.error("missing playlist");
 			retryLater();
-			return { audio: undefined, name: "" };
+			return { audio: undefined, url: undefined, name: "" };
 		}
 		const songs = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, playlist.directory),
@@ -88,7 +97,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		if (!bumperGroup) {
 			console.error("missing bumper group");
 			retryLater();
-			return { audio: undefined, name: "" };
+			return { audio: undefined, url: undefined, name: "" };
 		}
 		const bumpers = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, bumperGroup.directory),
@@ -111,11 +120,12 @@ async function getNextAudio(): Promise<AudioDescription> {
 		});
 		return {
 			audio: howl,
+			url: decodeURIComponent(selectedFile),
 			name: decodeURIComponent(baseName(selectedFile) ?? ""),
 		};
 	} else {
 		retryLater();
-		return { audio: undefined, name: "" };
+		return { audio: undefined, url: undefined, name: "" };
 	}
 }
 
@@ -155,7 +165,7 @@ async function playNext(fadeTime?: number) {
 		);
 		if (fadeOnSongEnd != undefined) {
 			fadeOnSongEnd = undefined;
-			changePlaying({ audio: undefined, name: "" });
+			changePlaying({ audio: undefined, url: undefined, name: "" });
 			return;
 		}
 	}
@@ -191,10 +201,11 @@ function playNextAfterFade(audio: AudioDescription, fade: number) {
 	);
 }
 
+let duration: number | undefined = undefined;
 function changePlaying(audio: AudioDescription) {
 	if (updatePlaying) updatePlaying(audio.name);
+	duration = audio.audio?.duration();
 	if (updateDuration) {
-		const duration = audio.audio?.duration();
 		updateDuration(duration == undefined ? "" : formatSongTime(duration));
 	}
 	changeTime(audio);
@@ -206,8 +217,10 @@ function changeTime(audio?: AudioDescription) {
 	if (audio.audio) {
 		const time = audio.audio.seek();
 		updateTime(formatSongTime(time));
+		updateNowPlaying({ file: audio.url, time: 1000 * time, duration });
 	} else {
 		updateTime("");
+		updateNowPlaying({});
 	}
 }
 
@@ -272,12 +285,14 @@ export default function Automation() {
 
 export const playingAtom = atom({ key: "playing", default: "" });
 let updatePlaying: SetterOrUpdater<string> | undefined;
+let playing: string;
 export const timeAtom = atom({ key: "time", default: "" });
 let updateTime: SetterOrUpdater<string> | undefined;
 export const durationAtom = atom({ key: "duration", default: "" });
 let updateDuration: SetterOrUpdater<string> | undefined;
 function Playing() {
-	const [_playing, setPlaying] = useRecoilState(playingAtom);
+	const [p, setPlaying] = useRecoilState(playingAtom);
+	playing = p;
 	updatePlaying = setPlaying;
 	const [_time, setTime] = useRecoilState(timeAtom);
 	updateTime = setTime;

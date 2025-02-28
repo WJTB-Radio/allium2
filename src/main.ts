@@ -10,6 +10,9 @@ import path from "path";
 import started from "electron-squirrel-startup";
 import fs from "fs/promises";
 import { glob } from "glob";
+import { startTuna } from "./tuna";
+import mediatags from "jsmediatags";
+import { ShortcutTags, TagType } from "jsmediatags/types";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -66,7 +69,10 @@ app.on("ready", () => {
 	ipcMain.handle("loadLibrary", loadLibrary);
 	ipcMain.handle("getPlatform", () => process.platform);
 	ipcMain.handle("getDebug", () => !app.isPackaged);
+	ipcMain.handle("updatePlaying", updatePlaying);
 	createWindow();
+	startExpress();
+	startTuna();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -160,4 +166,61 @@ async function loadLibrary(_event: IpcMainInvokeEvent, path: string) {
 	return (
 		await fs.readFile(`${path}/library.json`).catch(() => "")
 	).toString();
+}
+
+const tagCache: Record<string, TagType> = {};
+function getTags(file: string, cb: (tags: TagType) => void) {
+	if (file in tagCache) {
+		cb(tagCache[file]);
+	}
+	mediatags.read(file, {
+		onSuccess: (tag) => {
+			tagCache[file] = tag;
+			cb(tag);
+		},
+		onError: (error) => {
+			console.log("failed to read id3 tags: ", error.type, error.info);
+		},
+	});
+}
+
+export let songInfo: ShortcutTags & { time?: number; duration?: number } = {};
+
+async function updatePlaying(
+	_event: IpcMainInvokeEvent,
+	playing: {
+		file?: string;
+		time?: number;
+		duration?: number;
+	},
+) {
+	if (playing.file && playing.time && playing.duration) {
+		getTags(playing.file, (tags) => {
+			songInfo = {
+				...tags.tags,
+				time: playing.time,
+				duration: playing.duration,
+			};
+		});
+	} else {
+		songInfo = {};
+	}
+}
+
+import express from "express";
+
+function startExpress() {
+	const expressApp = express();
+	expressApp.get("/cover", (req, res) => {
+		if (!songInfo.picture) {
+			res.status(404);
+			return;
+		}
+		res.writeHead(200, { "Content-Type": songInfo.picture.format });
+		res.end(Buffer.from(songInfo.picture.data));
+	});
+	const port = 1609;
+	expressApp.listen(port, () => {
+		console.log(`express listening on ${port}`);
+	});
 }
