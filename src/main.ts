@@ -175,6 +175,7 @@ function getTags(file: string, cb: (tags: TagType) => void) {
 	}
 	mediatags.read(file, {
 		onSuccess: (tag) => {
+			tag.tags.artist = tag.tags.artist?.replace(" - Topic", "");
 			tagCache[file] = tag;
 			cb(tag);
 		},
