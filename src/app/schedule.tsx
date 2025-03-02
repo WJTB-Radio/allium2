@@ -15,11 +15,11 @@ export function getWeekTime(): number {
 	);
 }
 
-export function getCurrentBlock(): Block | undefined {
+export function getCurrentBlock(offset: number = 0): Block | undefined {
 	if (!library.selectedSchedule) {
 		return undefined;
 	}
-	const time = getWeekTime();
+	const time = getWeekTime() + offset;
 	const schedules = getSchedules();
 	const blocks = fallback(
 		schedules[library.selectedSchedule]?.blocks,
