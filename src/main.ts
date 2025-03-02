@@ -140,6 +140,7 @@ async function findSongs(_event: IpcMainInvokeEvent, path: string) {
 		{
 			cwd: path,
 			posix: true,
+			absolute: true,
 		},
 	);
 }

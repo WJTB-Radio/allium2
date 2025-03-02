@@ -28,17 +28,17 @@ const recentlyPlayedSongs: string[] = [];
 interface AudioDescription {
 	audio: Howl | undefined;
 	name: string;
-	url: string | undefined;
+	file: string | undefined;
 }
 
 let currentAudio: AudioDescription = {
 	audio: undefined,
-	url: undefined,
+	file: undefined,
 	name: "",
 };
 let nextAudio: AudioDescription = {
 	audio: undefined,
-	url: undefined,
+	file: undefined,
 	name: "",
 };
 
@@ -48,12 +48,12 @@ let crossfadeTimeout: number | undefined;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
 		retryLater();
-		return { audio: undefined, url: undefined, name: "" };
+		return { audio: undefined, file: undefined, name: "" };
 	}
 	if (!globalSettings.libraryPath) {
 		console.error("no library path", globalSettings);
 		retryLater();
-		return { audio: undefined, url: undefined, name: "" };
+		return { audio: undefined, file: undefined, name: "" };
 	}
 	// get the block that should play after the end of the current audio
 	const block = getCurrentBlock(currentAudio.audio?.duration() ?? 0);
@@ -72,7 +72,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		if (!playlist) {
 			console.error("missing playlist");
 			retryLater();
-			return { audio: undefined, url: undefined, name: "" };
+			return { audio: undefined, file: undefined, name: "" };
 		}
 		const songs = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, playlist.directory),
@@ -98,7 +98,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		if (!bumperGroup) {
 			console.error("missing bumper group");
 			retryLater();
-			return { audio: undefined, url: undefined, name: "" };
+			return { audio: undefined, file: undefined, name: "" };
 		}
 		const bumpers = await getSongsInDirectory(
 			joinPaths(globalSettings.libraryPath, bumperGroup.directory),
@@ -107,7 +107,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 	}
 
 	if (selectedFile) {
-		const howl = new Howl({ src: [`file://${selectedFile}`] });
+		const howl = new Howl({ src: [`file://${encodeURI(selectedFile)}`] });
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
 				howl.stop();
@@ -121,12 +121,12 @@ async function getNextAudio(): Promise<AudioDescription> {
 		});
 		return {
 			audio: howl,
-			url: decodeURI(selectedFile),
-			name: decodeURI(baseName(selectedFile) ?? ""),
+			file: selectedFile,
+			name: baseName(selectedFile) ?? "",
 		};
 	} else {
 		retryLater();
-		return { audio: undefined, url: undefined, name: "" };
+		return { audio: undefined, file: undefined, name: "" };
 	}
 }
 
@@ -166,7 +166,7 @@ async function playNext(fadeTime?: number) {
 		);
 		if (fadeOnSongEnd != undefined) {
 			fadeOnSongEnd = undefined;
-			changePlaying({ audio: undefined, url: undefined, name: "" });
+			changePlaying({ audio: undefined, file: undefined, name: "" });
 			return;
 		}
 	}
@@ -218,7 +218,7 @@ function changeTime(audio?: AudioDescription) {
 	if (audio.audio) {
 		const time = audio.audio.seek();
 		updateTime(formatSongTime(time));
-		updateNowPlaying({ file: audio.url, time: 1000 * time, duration });
+		updateNowPlaying({ file: audio.file, time: 1000 * time, duration });
 	} else {
 		updateTime("");
 		updateNowPlaying({});
