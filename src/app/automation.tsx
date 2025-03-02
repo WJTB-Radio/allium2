@@ -56,7 +56,7 @@ async function getNextAudio(): Promise<AudioDescription> {
 		return { audio: undefined, file: undefined, name: "" };
 	}
 	// get the block that should play after the end of the current audio
-	const block = getCurrentBlock(currentAudio.audio?.duration() ?? 0);
+	const block = getCurrentBlock((currentAudio.audio?.duration() ?? 0) * 1000);
 	let selectedFile: string | undefined;
 	const bumperInterval = getBumperInterval(block);
 	const numBumpers = getNumBumpers(block);
