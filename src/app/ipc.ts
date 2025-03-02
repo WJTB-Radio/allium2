@@ -16,7 +16,12 @@ export async function selectDirectory(
 export async function getSongsInDirectory(
 	directory: string,
 ): Promise<string[]> {
-	return (await getElectronAPI().findSongs(directory)).sort();
+	return (
+		(await getElectronAPI().findSongs(directory))
+			// idk why this string ends up in there in windows
+			.map((song) => (song.startsWith("//?/") ? song.substring(4) : song))
+			.sort()
+	);
 }
 
 export async function loadSettings(): Promise<GlobalSettings | undefined> {
