@@ -18,7 +18,9 @@ export async function getSongsInDirectory(
 ): Promise<string[]> {
 	return (await getElectronAPI().findSongs(directory))
 		.sort()
-		.map((file) => encodeURI(joinPaths(directory, file)));
+		.map((file) =>
+			encodeURI(joinPaths(directory, file).replace("\\", "/")),
+		);
 }
 
 export async function loadSettings(): Promise<GlobalSettings | undefined> {
