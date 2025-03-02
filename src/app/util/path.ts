@@ -2,7 +2,7 @@
 // joinPaths("/hello//", "world///") -> "hello/world"
 export function joinPaths(...args: string[]): string {
 	return args
-		.map((path) => path.trim())
+		.map((path) => path.trim().replace("\\", "/"))
 		.map(
 			(path, index) =>
 				// dont trim leading slash from first path
