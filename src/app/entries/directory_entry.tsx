@@ -18,7 +18,10 @@ export function DirectoryEntry(props: {
 					const selected = await selectDirectory(props.root);
 					if (selected == undefined) return;
 					props.setValue(
-						removePathPrefix(props.root, selected) ?? "",
+						(removePathPrefix(props.root, selected) ?? "").replace(
+							"\\",
+							"/",
+						),
 					);
 				}}
 			>

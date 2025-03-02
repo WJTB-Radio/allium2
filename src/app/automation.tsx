@@ -121,8 +121,8 @@ async function getNextAudio(): Promise<AudioDescription> {
 		});
 		return {
 			audio: howl,
-			url: decodeURIComponent(selectedFile),
-			name: decodeURIComponent(baseName(selectedFile) ?? ""),
+			url: decodeURI(selectedFile),
+			name: decodeURI(baseName(selectedFile) ?? ""),
 		};
 	} else {
 		retryLater();
