@@ -45,6 +45,7 @@ let nextAudio: AudioDescription = {
 let songsPlayed = 0;
 let bumpersPlayed = 0;
 let crossfadeTimeout: number | undefined;
+let songsLoaded = 0;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
 		retryLater();
@@ -108,8 +109,11 @@ async function getNextAudio(): Promise<AudioDescription> {
 
 	if (selectedFile) {
 		if (nextAudio.audio) {
+			songsLoaded -= 1;
+			console.log(`songs loaded ${songsLoaded}`);
 			nextAudio.audio.unload();
 		}
+		songsLoaded += 1;
 		const howl = new Howl({ src: [`file://${encodeURI(selectedFile)}`] });
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
@@ -118,6 +122,8 @@ async function getNextAudio(): Promise<AudioDescription> {
 		});
 		howl.on("loaderror", async () => {
 			if (nextAudio.audio) {
+				songsLoaded -= 1;
+				console.log(`songs loaded ${songsLoaded}`);
 				nextAudio.audio.unload();
 			}
 			nextAudio = await getNextAudio();
@@ -171,10 +177,11 @@ async function playNext(fadeTime?: number) {
 			0.0,
 			actualFadeTime,
 		);
-		const old = { ...currentAudio };
+		const oldAudio = currentAudio.audio;
 		window.setTimeout(() => {
-			console.log(`unloading ${old.name}`);
-			old.audio?.unload();
+			songsLoaded -= 1;
+			console.log(`songs loaded ${songsLoaded}`);
+			oldAudio?.unload();
 		}, actualFadeTime);
 		if (fadeOnSongEnd != undefined) {
 			fadeOnSongEnd = undefined;
@@ -199,6 +206,7 @@ async function playNext(fadeTime?: number) {
 	playNextAfterFade(nextAudio, crossfadeDuration);
 	currentAudio = nextAudio;
 	// preload next audio so its ready when we want it
+	nextAudio = { audio: undefined, file: undefined, name: "" };
 	nextAudio = await getNextAudio();
 }
 
@@ -268,6 +276,13 @@ export function fadeOut(fadeTime: number) {
 	}
 	if (currentAudio.audio) {
 		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
+		const oldAudio = currentAudio.audio;
+		const oldName = currentAudio.name;
+		window.setTimeout(() => {
+			songsLoaded -= 1;
+			console.log(`songs loaded ${songsLoaded}`);
+			oldAudio?.unload();
+		}, fadeTime);
 		currentAudio.audio = undefined;
 		currentAudio.name = "";
 		changePlaying(currentAudio);
