@@ -159,11 +159,17 @@ async function playNext(fadeTime?: number) {
 	}
 	if (!fadeTime) fadeTime = crossfadeDuration;
 	if (currentAudio.audio) {
+		const actualFadeTime = fadeOnSongEnd ?? fadeTime;
 		currentAudio.audio.fade(
 			currentAudio.audio.volume(),
 			0.0,
-			fadeOnSongEnd ?? fadeTime,
+			actualFadeTime,
 		);
+		const old = { ...currentAudio };
+		window.setTimeout(() => {
+			console.log(`unloading ${old.name}`);
+			old.audio?.unload();
+		}, actualFadeTime);
 		if (fadeOnSongEnd != undefined) {
 			fadeOnSongEnd = undefined;
 			changePlaying({ audio: undefined, file: undefined, name: "" });
