@@ -15,13 +15,17 @@ export function DirectoryEntry(props: {
 			</span>
 			<button
 				onClick={async () => {
-					const selected = await selectDirectory(props.root);
+					const selected = (
+						await selectDirectory(props.root.replaceAll("\\", "/"))
+					)?.replaceAll("\\", "/");
 					if (selected == undefined) return;
 					props.setValue(
-						(removePathPrefix(props.root, selected) ?? "").replace(
-							"\\",
-							"/",
-						),
+						(
+							removePathPrefix(
+								props.root.replaceAll("\\", "/"),
+								selected,
+							) ?? ""
+						).replaceAll("\\", "/"),
 					);
 				}}
 			>

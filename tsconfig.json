@@ -3,6 +3,7 @@
 		"strict": true,
 		"jsx": "react-jsx",
 		"target": "ES2018",
+		"lib": ["es2021"],
 		"allowJs": true,
 		"module": "ES2022",
 		"skipLibCheck": true,
