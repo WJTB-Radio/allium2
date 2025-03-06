@@ -107,6 +107,9 @@ async function getNextAudio(): Promise<AudioDescription> {
 	}
 
 	if (selectedFile) {
+		if (nextAudio.audio) {
+			nextAudio.audio.unload();
+		}
 		const howl = new Howl({ src: [`file://${encodeURI(selectedFile)}`] });
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
@@ -114,6 +117,9 @@ async function getNextAudio(): Promise<AudioDescription> {
 			}
 		});
 		howl.on("loaderror", async () => {
+			if (nextAudio.audio) {
+				nextAudio.audio.unload();
+			}
 			nextAudio = await getNextAudio();
 		});
 		howl.on("playerror", async () => {
