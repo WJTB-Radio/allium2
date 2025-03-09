@@ -45,7 +45,6 @@ let nextAudio: AudioDescription = {
 let songsPlayed = 0;
 let bumpersPlayed = 0;
 let crossfadeTimeout: number | undefined;
-let songsLoaded = 0;
 async function getNextAudio(): Promise<AudioDescription> {
 	if (!loaded) {
 		retryLater();
@@ -109,11 +108,8 @@ async function getNextAudio(): Promise<AudioDescription> {
 
 	if (selectedFile) {
 		if (nextAudio.audio) {
-			songsLoaded -= 1;
-			console.log(`songs loaded ${songsLoaded}`);
 			nextAudio.audio.unload();
 		}
-		songsLoaded += 1;
 		const howl = new Howl({ src: [`file://${encodeURI(selectedFile)}`] });
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
@@ -122,8 +118,6 @@ async function getNextAudio(): Promise<AudioDescription> {
 		});
 		howl.on("loaderror", async () => {
 			if (nextAudio.audio) {
-				songsLoaded -= 1;
-				console.log(`songs loaded ${songsLoaded}`);
 				nextAudio.audio.unload();
 			}
 			nextAudio = await getNextAudio();
@@ -179,8 +173,6 @@ async function playNext(fadeTime?: number) {
 		);
 		const oldAudio = currentAudio.audio;
 		window.setTimeout(() => {
-			songsLoaded -= 1;
-			console.log(`songs loaded ${songsLoaded}`);
 			oldAudio?.unload();
 		}, actualFadeTime);
 		if (fadeOnSongEnd != undefined) {
@@ -279,8 +271,6 @@ export function fadeOut(fadeTime: number) {
 		const oldAudio = currentAudio.audio;
 		const oldName = currentAudio.name;
 		window.setTimeout(() => {
-			songsLoaded -= 1;
-			console.log(`songs loaded ${songsLoaded}`);
 			oldAudio?.unload();
 		}, fadeTime);
 		currentAudio.audio = undefined;
