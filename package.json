@@ -1,7 +1,7 @@
 {
 	"name": "allium2",
 	"productName": "allium2",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "allium plays music when noone's show is on.",
 	"main": ".vite/build/main.js",
 	"homepage": "https://wjtbradio.com",
