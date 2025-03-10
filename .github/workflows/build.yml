@@ -51,7 +51,9 @@ jobs:
       - name: Install dependencies
         run: |
           ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-          sudo apt install -y wine wine64 mono-devel mono-runtime # need these packages to build for windows
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y wine wine64 mono-devel mono-runtime wine32:i386 # need these packages to build for windows
           cd /usr/bin
           sudo ln -s wine wine64 # electron forge looks for wine at wine64
       - name: Build for windows
