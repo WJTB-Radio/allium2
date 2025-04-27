@@ -110,7 +110,15 @@ async function getNextAudio(): Promise<AudioDescription> {
 		if (nextAudio.audio) {
 			nextAudio.audio.unload();
 		}
-		const howl = new Howl({ src: [`file://${encodeURI(selectedFile)}`] });
+		const howl = new Howl({
+			src: [`file://${encodeURI(selectedFile)}`],
+			// web audio api leaks memory in chromium,
+			// and it has for as long as it's been supported in chromium....
+			// this needs to be here for the forseeable future
+			// (is there an electron that uses firefox instead of chromium?)
+			// (this causes fades to be choppier than they could be)
+			html5: true,
+		});
 		howl.on("fade", () => {
 			if (howl.volume() == 0) {
 				howl.stop();
@@ -269,7 +277,6 @@ export function fadeOut(fadeTime: number) {
 	if (currentAudio.audio) {
 		currentAudio.audio.fade(currentAudio.audio.volume(), 0.0, fadeTime);
 		const oldAudio = currentAudio.audio;
-		const oldName = currentAudio.name;
 		window.setTimeout(() => {
 			oldAudio?.unload();
 		}, fadeTime);
